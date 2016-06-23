@@ -17,7 +17,7 @@ from bson.objectid import ObjectId
 from pymongo import MongoClient
 
 client = MongoClient('10.0.0.100', 27017)
-dbname = 'klx_ph'
+dbname = 'klx_math'
 db = client[dbname]
 
 template = ur'''% !TEX encoding=utf8
@@ -29,7 +29,7 @@ template = ur'''% !TEX encoding=utf8
 \\usepackage{graphicx}
 \\usepackage{pifont,arcs}
 \\usepackage{ifthen,CJKnumb}
-\\usepackage[paperwidth=195mm,paperheight=270mm,left=12mm,right=14mm,top=16mm,bottom=4mm,includefoot]{geometry}'''ur'''
+%\\usepackage[paperwidth=195mm,paperheight=270mm,left=12mm,right=14mm,top=16mm,bottom=4mm,includefoot]{geometry}'''ur'''
 %%\setCJKmainfont{SimSun}
 \linespread{1.5}
 \setlength{\fboxsep}{0pt}
@@ -149,16 +149,16 @@ def str2latex(ori):
 
     def unicode_2_latex(s):
         unicode2latex = [
-            (ur'\u2460', ur'\text{\ding{172}}'),
-            (ur'\u2461', ur'\text{\ding{173}}'),
-            (ur'\u2462', ur'\text{\ding{174}}'),
-            (ur'\u2463', ur'\text{\ding{175}}'),
-            (ur'\u2464', ur'\text{\ding{176}}'),
-            (ur'\u2465', ur'\text{\ding{177}}'),
-            (ur'\u2466', ur'\text{\ding{178}}'),
-            (ur'\u2467', ur'\text{\ding{179}}'),
-            (ur'\u2468', ur'\text{\ding{180}}'),
-            (ur'\u2469', ur'\text{\ding{181}}'),
+            (ur'\u2460', ur'{\text{\ding{172}}}'),
+            (ur'\u2461', ur'{\text{\ding{173}}}'),
+            (ur'\u2462', ur'{\text{\ding{174}}}'),
+            (ur'\u2463', ur'{\text{\ding{175}}}'),
+            (ur'\u2464', ur'{\text{\ding{176}}}'),
+            (ur'\u2465', ur'{\text{\ding{177}}}'),
+            (ur'\u2466', ur'{\text{\ding{178}}}'),
+            (ur'\u2467', ur'{\text{\ding{179}}}'),
+            (ur'\u2468', ur'{\text{\ding{180}}}'),
+            (ur'\u2469', ur'{\text{\ding{181}}}'),
             (ur'\u2160', ur'\mathrm{I}'),
             (ur'\u2161', ur'\mathrm{II}'),
             (ur'\u2162', ur'\mathrm{III}'),
@@ -240,7 +240,7 @@ def get_img(opt, img_width):
     return opt
 
 
-def item_render(item_id):
+def item_latex_render(item_id):
     item = db.items.find_one({'_id': item_id})
     qss = ''
     if item['data']['type'] in [1001, 2001]:
@@ -269,17 +269,18 @@ def item_render(item_id):
                     'data']['qs'][z]['desc']
                 qs = qs.replace('[[nn]]', '\\dd ')
                 qss += qs
-    desc = get_img(desc, 0.5)
+    # desc = get_img(desc, 0.5)
     qss = re.sub(img_re2, u'\\ ', qss)
     desc = str2latex(desc)
     qss = str2latex(qss)
     opt_tex = str2latex(opt_tex)
     item_tex = u'%{}\n{}\\\\\n{}\\\\\n{}'.format(
         item_id, desc, qss, opt_tex)
+    item_tex = re.sub(img_re2, u'', item_tex)
     return item_tex
 
 
-def physics_paper_render(paper):
+def klx_paper_render(paper):
 
     def _deal_paper_head(paper):
         return '% {id}\n\\begin{{center}}\n{paper_name}\n\\end{{center}}'.format(id=paper['_id'], paper_name=paper['name'])
@@ -293,7 +294,7 @@ def physics_paper_render(paper):
     for part in paper['parts']:
         result_tex += _deal_part_head(part)
         for item in part:
-            result_tex += item_render(item['item_id'])
+            result_tex += item_latex_render(item['item_id'])
 
     result_tex += '\\end{document}'
     return result_tex
@@ -318,18 +319,36 @@ itmtyp_2_name = {1001: '选择题',
                  2010: '综合应用题',
                  }
 
-paper_id = ObjectId("57077e4cbbddbd37777b4c8a")
-paper = db.papers.find_one({'_id': paper_id})
+
+# paper_id = ObjectId("57077e4cbbddbd37777b4c8a")
+# paper = db.papers.find_one({'_id': paper_id})
 paper_path = '../papers/'
 item_path = '../items/'
 img_path = '../imgs/'
 img_re2 = re.compile(ur'\[\[img\]\].*?\[\[/img\]\]')
 img_file_re = re.compile(ur'\w+\.(?:png|jpg|gif|bmp)')
-if os.path.exists(paper_path):
-    pass
-else:
-    os.makedirs(paper_path)
+for path in [paper_path, item_path, img_path]:
+    if os.path.exists(path):
+        pass
+    else:
+        os.makedirs(path)
 
-f = open('{path}{name}.tex'.format(path=paper_path, name=paper['name']), 'w')
-f.write(physics_paper_render(paper))
-f.close()
+# f = open('{path}{name}.tex'.format(path=paper_path, name=paper['name']), 'w')
+# f.write(klx_paper_render(paper))
+# f.close()
+
+
+def do_item(item_id, subject):
+    tex = template
+    dbname = subject
+    tex += item_latex_render(ObjectId(item_id))
+    tex += '\\end{document}'
+    return tex
+
+
+item_id = '536b5b8ce138235d32c50627'
+subject = 'klx_math'
+path = item_path
+f = open('{}{}.tex'.format(path, item_id), 'w')
+f.write(do_item(item_id, subject))
+f.close
