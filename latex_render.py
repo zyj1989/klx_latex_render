@@ -22,7 +22,7 @@ db = client[dbname]
 
 template = ur'''% !TEX encoding=utf8
 % !TEX program=xelatex
-\documentclass{article}'''u'''
+\documentclass{book}'''u'''
 \\usepackage{xeCJK}
 \\usepackage{varwidth}
 \\usepackage{amsmath, amssymb, yhmath}
@@ -188,8 +188,6 @@ def str2latex(ori):
     ori = re.sub(
         ur'\\begin\s?{array}[\s\S]*?\\end\s?{array}', array_col_correction, ori)
     ori = re.sub(ur'\u005f\u005f+', ur'\\dd ', ori)
-    # ori = re.sub(ur'{\\rm\s*\\Omega}', ur'\\Omega', ori)
-    # ori = re.sub(ur'{\\rm\s*k*\\Omega}', ur'{\\rm k}\\Omega', ori)
     return ori
 
 
@@ -320,8 +318,6 @@ itmtyp_2_name = {1001: '选择题',
                  }
 
 
-# paper_id = ObjectId("57077e4cbbddbd37777b4c8a")
-# paper = db.papers.find_one({'_id': paper_id})
 paper_path = '../papers/'
 item_path = '../items/'
 img_path = '../imgs/'
@@ -346,7 +342,7 @@ def do_item(item_id, subject):
     return tex
 
 
-item_id = '536b5b8ce138235d32c50627'
+item_id = '550780830045fe3e0e532e6c'
 subject = 'klx_math'
 path = item_path
 f = open('{}{}.tex'.format(path, item_id), 'w')
