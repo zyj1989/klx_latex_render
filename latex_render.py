@@ -44,25 +44,39 @@ def str2latex(ori):
         return s
 
     def cn_in_mathmode(s):  # by ningshuo
-        def _deal(s, math_end):
-            stop = s.find(math_end)
+        def _dealdisplay(s):
+            stop = s.find(ur'\]')
             if stop == -1:
-                s = s
+                s = s.replace(u'\n', u'\\\\\n')
             else:
-                # s[stop:] = s[stop:].replace(ur'&', ur'\\&')
-                s = re.sub(ur'[\u4e00-\u9fa5]+',
-                           lambda x: ur'\text{%s}' % x.group(), s[:stop]) + s[stop:]
+                math = re.sub(ur'[\u4e00-\u9fa5]+',
+                              lambda x: ur'\text{%s}' % x.group(), s[:stop])
+                text = s[stop:]
+                s = math + text
             return s
 
-        math_mode_delimiter = [
-            (ur'\(', ur'\)'),
-            (ur'\[', ur'\]'),
-        ]
-        for math_begin, math_end in math_mode_delimiter:
-            s = re.split(ur'(?<!\\)\\%s' % math_begin, s)
-            for idx, str in enumerate(s, start=0):
-                s[idx] = _deal(str, math_end)
-            s = math_begin.join(s)
+        def _dealinline(s):
+            stop = s.find(ur'\)')
+            if stop == -1:
+                s = re.split(ur'(?<!\\)\\\[', s)
+                for idx, str in enumerate(s, start=0):
+                    s[idx] = _dealdisplay(str)
+                s = ur'\['.join(s)
+            else:
+                math = re.sub(ur'[\u4e00-\u9fa5]+',
+                              lambda x: ur'\text{%s}' % x.group(), s[:stop])
+                k = s[stop:]
+                k = re.split(ur'(?<!\\)\\\[', k)
+                for idx, str in enumerate(k, start=0):
+                    k[idx] = _dealdisplay(str)
+                k = ur'\['.join(k)
+                s = math + k
+            return s
+
+        s = re.split(ur'(?<!\\)\\\(', s)
+        for idx, str in enumerate(s, start=0):
+            s[idx] = _dealinline(str)
+        s = ur'\('.join(s)
         return s
 
     def array_col_correction(x):
@@ -177,34 +191,34 @@ def item_latex_render(item_id):
     item = db.items.find_one({'_id': item_id})
     qs_tex = u''
     if item['data']['type'] in [1001, 2001]:
-        tex += item['data']['qs'][0][
-            'desc'].replace('[[nn]]', '\\dq ')
+        tex += str2latex(item['data']['qs'][0][
+            'desc'].replace('[[nn]]', '\\dq '))
         opts = item['data']['qs'][0]['opts']
         opt_tex = get_opts_head(opts)
         for opt in opts:
             opt = get_img(opt, 0.222)
             opt_tex += '{%s}' % opt
-        tex += opt_tex
+        tex += str2latex(opt_tex)
     elif item['data']['type'] in [1002, 2002]:
-        tex += item['data']['qs'][0][
-            'desc'].replace('[[nn]]', '\\dd ')
+        tex += str2latex(item['data']['qs'][0][
+            'desc'].replace('[[nn]]', '\\dd '))
     elif item['data']['type'] in [1003, 2003, 2004, 2005]:
         if len(item['data']['stem']) == 0:
             pass
         else:
-            tex += item['data']['stem'].replace('[[nn]]', '\\dq ')
+            tex += str2latex(item['data']['stem'].replace('[[nn]]', '\\dq '))
         if len(item['data']['qs'][0]['desc']) != 0:
             tex += u'\\begin{subquestions}\n'
             for qs in item['data']['qs']:
                 qss_tex = u''
                 if len(qs['desc']) != 0:
-                    qs_tex += u'\wqq {}\n'.format(
-                        qs['desc'].replace('[[nn]]', '\\dd '))
+                    qs_tex += u'\wqq {}\n'.format(str2latex(
+                        qs['desc'].replace('[[nn]]', '\\dd ')))
                 if 'qs' in qs:
                     qss_tex += u'\\begin{subsubquestions}\n'
                     for qss in qs['qs']:
-                        qss_tex += u'\wqqq {}\n'.format(
-                            qss['desc'].replace('[[nn]]', '\\dd '))
+                        qss_tex += u'\wqqq {}\n'.format(str2latex(
+                            qss['desc'].replace('[[nn]]', '\\dd ')))
                     qss_tex += u'\\end{subsubquestions}\n'
                 qs_tex += qss_tex
             tex += qs_tex
@@ -221,7 +235,7 @@ def item_latex_render(item_id):
     # # item_id, desc, qss, opt_tex)
 
     tex = re.sub(img_re2, u'[[img]]', tex)
-    tex = str2latex(tex)
+
     # return item_tex
     return tex
 
