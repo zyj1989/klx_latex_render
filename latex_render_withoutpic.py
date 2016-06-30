@@ -130,12 +130,21 @@ def str2latex(ori):
         for uni, latex in unicode2latex:
             s = s.replace(uni, latex)
         return s
+    # print ori
     ori = unicode_2_latex(ori)
+    print ori
+    print '________'
+    ori = re.sub(img_re2, u'', ori)
+    print ori
     ori = re.sub(ur'(?<!(?=\\|%))%', '\%', ori)
     ori = cn_in_mathmode(ori)
+    print '========='
+    print ori
+    print '+++++++++'
     ori = re.sub(
         ur'\\begin\s?{array}[\s\S]*?\\end\s?{array}', array_col_correction, ori)
     ori = re.sub(ur'\u005f\u005f+', ur'\\dd ', ori)
+    ori = ori.replace(u'\n\n', '\n')
     return ori
 
 
@@ -171,7 +180,7 @@ def get_opts_head(opts):
         return '\\ch'
 
 
-def get_img(opt, img_width):
+def get_opt_img(opt, img_width):
     opt = punc_in_img(opt)
     opt_imgs = re.findall(img_file_re, opt)
     if opt_imgs:
@@ -186,19 +195,23 @@ def get_img(opt, img_width):
     return opt
 
 
+def get_desc_img(desc):
+    desc_imgs = re.findall(img_file_re, desc)
+    if len(desc_imgs) == 1:
+        tex = ur''
+
+
 def item_latex_render(item_id):
-    tex = '\n%%{}\n\\begin{{question}}\n'.format(item_id)
+    tex = '%% {}\n\\begin{{question}}\n'.format(item_id)
     item = db.items.find_one({'_id': item_id})
     qs_tex = u''
-    if not item:
-        return '%%%%%%%%%%%%%%%%%%%%%%'
     if item['data']['type'] in [1001, 2001]:
         tex += str2latex(item['data']['qs'][0][
             'desc'].replace('[[nn]]', '\\dq '))
         opts = item['data']['qs'][0]['opts']
         opt_tex = get_opts_head(opts)
         for opt in opts:
-            opt = get_img(opt, 0.222)
+            opt = get_opt_img(opt, 0.222)
             opt_tex += '{%s}' % opt
         tex += str2latex(opt_tex)
     elif item['data']['type'] in [1002, 2002]:
@@ -227,7 +240,7 @@ def item_latex_render(item_id):
             tex += u'\\end{subquestions}\n'
 
     tex += u'\\end{question}\n'
-    # desc = get_img(desc, 0.5)
+    # desc = get_opt_img(desc, 0.5)
     # qss = re.sub(img_re2, u'\\ ', qss)
     # desc = str2latex(desc)
     # qss = str2latex(qss)
@@ -236,8 +249,6 @@ def item_latex_render(item_id):
     # # item_tex = u'%{}\n{}\\\\\n{}\\\\\n{}'.format(
     # # item_id, desc, qss, opt_tex)
 
-    tex = re.sub(img_re2, u'', tex)
-
     # return item_tex
     return tex
 
@@ -245,7 +256,7 @@ def item_latex_render(item_id):
 def klx_paper_render(paper):
 
     def _deal_paper_head(paper):
-        return '% {id}\n\\begin{{center}}\n{paper_name}\n\\end{{center}}'.format(id=paper['_id'], paper_name=paper['name'])
+        return '%% {id}\n\\begin{{center}}\n{paper_name}\n\\end{{center}}'.format(id=paper['_id'], paper_name=paper['name'])
 
     def _deal_part_head(part):
         item_type = itmtyp_2_name[part[0]['type']]
@@ -282,7 +293,7 @@ itmtyp_2_name = {1001: '选择题',
                  }
 
 client = MongoClient('10.0.0.100', 27017)
-dbname = 'klx_math'
+dbname = 'klx_ph'
 db = client[dbname]
 
 
@@ -296,25 +307,29 @@ for path in [paper_path, item_path, img_path]:
         pass
     else:
         os.makedirs(path)
-# paper_id = ObjectId('572abb4bbbddbd4d2dbd89dc')
-# paper = db.papers.find_one({'_id': paper_id})
-# f = open('{path}{name}.tex'.format(path=paper_path, name='11'), 'w')
-# f.write(klx_paper_render(paper))
-# f.close()
+paper_id = ObjectId('572abb4bbbddbd4d2dbd89dc')
+paper = db.papers.find_one({'_id': paper_id})
+f = open('{path}{name}.tex'.format(path=paper_path, name='11'), 'w')
+f.write(klx_paper_render(paper))
+f.close()
+# item_ids = ['561609265417d174cb1a3b2f']
+
 
 def do_items(item_ids, subject):
     tex = template
     dbname = subject
     for item_id in item_ids:
-        print item_id
         tex += item_latex_render(ObjectId(item_id))
     tex += u'\\end{document}'
     return tex
 
 
-item_id = '571107ecdef2970a16651b2e'
-subject = 'klx_math'
-path = paper_path
-f = open('{}{}.tex'.format(path, '111111111'), 'w')
-f.write(do_items(item_ids, subject))
-f.close
+# item_ids = [
+#     '562739ec5417d174cb1a3de5',
+#     '560b8cd15417d174cc8280a4',
+# ]
+# subject = 'klx_ph'
+# path = paper_path
+# f = open('{}{}.tex'.format(path, '111111111'), 'w')
+# f.write(do_items(item_ids, subject))
+# f.close
