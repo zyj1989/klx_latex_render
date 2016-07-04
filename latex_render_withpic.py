@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 # encoding:utf-8
 '''
@@ -125,6 +124,7 @@ def str2latex(ori):
             (ur'{align}', ur'{matrix}'),
             (ur'{split}', ur'{aligned}'),
             (ur'\uff1d', ur'='),
+            (ur'\ufe63', ur'-'),
             (ur'\Omega', ur'\text{$\Omega$}'),
             (ur'\style{font-family:Times New Roman}{g}', ur'\textsl{g}')
         ]
@@ -294,7 +294,7 @@ itmtyp_2_name = {1001: '选择题',
                  }
 
 client = MongoClient('10.0.0.100', 27017)
-dbname = 'klx_ph'
+dbname = 'klx_math'
 db = client[dbname]
 
 
@@ -308,11 +308,11 @@ for path in [paper_path, item_path, img_path]:
         pass
     else:
         os.makedirs(path)
-paper_id = ObjectId('572abb4bbbddbd4d2dbd89dc')
-paper = db.papers.find_one({'_id': paper_id})
-f = open('{path}{name}.tex'.format(path=paper_path, name='11'), 'w')
-f.write(klx_paper_render(paper))
-f.close()
+# paper_id = ObjectId('572abb4bbbddbd4d2dbd89dc')
+# paper = db.papers.find_one({'_id': paper_id})
+# f = open('{path}{name}.tex'.format(path=paper_path, name='11'), 'w')
+# f.write(klx_paper_render(paper))
+# f.close()
 # item_ids = ['561609265417d174cb1a3b2f']
 
 
@@ -325,12 +325,12 @@ def do_items(item_ids, subject):
     return tex
 
 
-# item_ids = [
-#     '562739ec5417d174cb1a3de5',
-#     '560b8cd15417d174cc8280a4',
-# ]
-# subject = 'klx_ph'
-# path = paper_path
-# f = open('{}{}.tex'.format(path, '111111111'), 'w')
-# f.write(do_items(item_ids, subject))
-# f.close
+item_ids = [
+    '573ebcaddef2976ff3a83bbe',
+    # '53f30bb0e1382317a62df561',
+]
+subject = 'klx_math'
+path = paper_path
+f = open('{}{}.tex'.format(path, '111111111'), 'w')
+f.write(do_items(item_ids, subject))
+f.close
