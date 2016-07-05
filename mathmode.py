@@ -116,16 +116,16 @@ def cn_in_mathmode(s):  # by ningshuo
     s = s.replace(u'\]\\\\\n', u'\]\n')
     return s
 
-s = ur'''为了在实验中保护电流表和调节电阻时电压表、电流表的示数变化均明显，乙同学对甲同学的实验进行改进，设计了如图丙所示的电路，丙电路中电阻  \( R_{0} \)  应该选取下列备选电阻的哪一个？         \\
-A.  \(  1\ \Omega     \)  B.  \(  5 \ \Omega     \)  C.  \(  10\ \Omega     \)  D.  \(  20\ \Omega    \) 
-是么'''
+s = ur'''某同学在研究性学习中记录了一些与地球、月球有关的数据资料如图中表所示，利用这些数据来计算地球表面与月球表面之间的距离  \( {\rm s} \) ，则下列运算公式中错误的是（）
+\begin{array}{|c|c|} \hline
+地球半径&R=6400\ {\rm km}\\  \hline
+月球半径&r=1740\ {\rm km}\\  \hline
+地球表面重力加速度&g0=9.80\ \rm{m/s^2}\\  \hline
+月球表面重力加速度&g'=1.56\ \rm{m/s^2}\\  \hline
+月球绕地球转动的线速度&v=1\ {\rm km/s}\\  \hline
+月球绕地球转动周期&T=27.3天\\  \hline
+光速&c=2.998 \times 10^5 \ {\rm km/s}\\  \hline
+用激光器向月球表面发射激光光束,经过约t=2.565\ {\rm s}接收到从月球表面反射回来的激光信号\\  \hline
+\end{array}'''
 
-re_choice = re.compile(ur'(A\..*?)(B\..*?)(C\..*?)(D\.[^\n]*)')
-# print re.findall(re_choice, s)
-
-
-# def deal_choice(x):
-# print x.group(1)
-# x = re.sub(re_choice, deal_choice, s)
-
-print re.sub(ur'.*?([\u4e00-\u9fa5]+).*?', lambda x: x.group(1), s)
+print array_mathmode(s)

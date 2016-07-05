@@ -221,7 +221,7 @@ def item_latex_render(item_id):
         if len(item['data']['stem']) == 0:
             pass
         else:
-            tex += str2latex(item['data']['stem'].replace('[[nn]]', '\\dq '))
+            tex += str2latex(item['data']['stem'].replace('[[nn]]', '\\dd '))
         if len(item['data']['qs'][0]['desc']) != 0:
             tex += u'\\begin{subquestions}\n'
             for qs in item['data']['qs']:
