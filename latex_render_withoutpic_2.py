@@ -289,6 +289,7 @@ def item_latex_render(item_id):
                 qs_tex += qss_tex
             tex += qs_tex
             tex += u'\\end{subquestions}\n'
+    # test commit
 
     tex += u'\\end{question}\n'
     tex = re.sub(ur'\\begin{question}\s?\\\\', ur'\\begin{question}', tex)
