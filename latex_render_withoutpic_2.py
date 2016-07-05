@@ -231,10 +231,10 @@ def get_opt_img(opt, img_width):
                     '{}{}'.format(img_url, img_file)).read())
             tmp_img = cStringIO.StringIO(open(file_path_name).read())
             im = Image.open(tmp_img)
-            print im.size[0], im.size[1] 
+            print im.size[0], im.size[1]
             arg = 'width'
-            if im.size[0] < im.size[1]:  
-            # adjust the longer one between width end height 
+            if im.size[0] < im.size[1]:
+                # adjust the longer one between width end height
                 arg = 'height'
             opt_img = '\\includegraphics[{}={}\\textwidth]{{{}{}}}'.format(
                 arg, img_width, img_path, img_file)
@@ -289,7 +289,6 @@ def item_latex_render(item_id):
                 qs_tex += qss_tex
             tex += qs_tex
             tex += u'\\end{subquestions}\n'
-    # test commit
 
     tex += u'\\end{question}\n'
     tex = re.sub(ur'\\begin{question}\s?\\\\', ur'\\begin{question}', tex)
