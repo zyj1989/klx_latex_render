@@ -13,7 +13,7 @@ sys.path.append('..')
 import copy
 import logging
 import urllib2
-import cStringIO
+import StringIO
 from PIL import Image
 from bson.objectid import ObjectId
 from pymongo import MongoClient
@@ -206,7 +206,6 @@ def get_opts_head(opts):
     opt_imgs_cnt = 0
     for opt in opts:
         opt = punc_in_img(opt)
-        print opt
         opt_imgs = re.findall(img_file_re, opt)
         if opt_imgs:
             opt_imgs_cnt += 1
@@ -229,10 +228,13 @@ def get_opt_img(opt, img_width):
                 img_f = open(file_path_name, 'w')
                 img_f.write(urllib2.urlopen(
                     '{}{}'.format(img_url, img_file)).read())
-            tmp_img = cStringIO.StringIO(open(file_path_name).read())
+            print file_path_name
+            tmp_img = StringIO.StringIO(open(file_path_name).read())
             im = Image.open(tmp_img)
-            print im.size[0], im.size[1]
+
+            print im.format, im.size[0], im.size[1]
             arg = 'width'
+
             if im.size[0] < im.size[1]:
                 # adjust the longer one between width end height
                 arg = 'height'
@@ -250,12 +252,12 @@ def get_opt_img(opt, img_width):
 
 
 def item_latex_render(item_id):
-    tex = '%% {}\n\\begin{{varwidth}}{{{}}}'.format(item_id, pdf_width)
     item = db.items.find_one({'_id': item_id})
     qs_tex = u''
     if not item:
         print item_id
         return '%%%%%%%%%%%%%%%%'
+    tex = '%% {}\n\\begin{{varwidth}}{{{}}}'.format(item_id, pdf_width)
     if item['data']['type'] in [1001, 2001]:
         tex += str2latex(item['data']['qs'][0][
             'desc'].replace('[[nn]]', '\\dq '))
@@ -290,8 +292,8 @@ def item_latex_render(item_id):
             tex += qs_tex
             tex += u'\\end{subquestions}\n'
 
-    tex += u'\\end{question}\n'
-    tex = re.sub(ur'\\begin{question}\s?\\\\', ur'\\begin{question}', tex)
+    tex += u'\\end{varwidth}\n'
+    # tex = re.sub(ur'\\begin{question}\s?\\\\', ur'\\begin{question}', tex)
     # tex = tex.replace(ur'\begin{question}\\', ur'\begin{question}')
     # desc = get_opt_img(desc, 0.5)
     # qss = re.sub(img_re2, u'\\ ', qss)
@@ -323,6 +325,29 @@ def klx_paper_render(paper):
 
     result_tex += '\\end{document}'
     return result_tex
+
+
+def get_items(item_ids, subject):
+    tex = template
+    dbname = subject
+    for item_id in item_ids:
+        tex += item_latex_render(ObjectId(item_id))
+        tex += '\\\\'  # used for multi-items
+    tex += u'\\end{document}'
+    return tex
+
+
+def do_multi_items_test(skip, limit):
+    item_ids_cursor = db.items.find({'deleted': False}, {
+        '_id': 1}).skip(skip).limit(limit)
+    item_ids = []
+    for item in item_ids_cursor:
+        item_ids.append(item['_id'])
+    f = open('{}test{}.tex'.format(paper_path, skip), 'w')
+    f.write(get_items(item_ids, subject))
+    f.close()
+
+
 """ 
 === Setting =============================================================
 """
@@ -348,7 +373,7 @@ client = MongoClient('10.0.0.100', 27017)
 dbname = 'klx_ph'
 db = client[dbname]
 
-
+subject = 'klx_ph'
 paper_path = '../papers/'
 item_path = '../items/'
 img_path = '../imgs/'
@@ -366,24 +391,10 @@ for path in [paper_path, item_path, img_path]:
 # f = open('{path}{name}.tex'.format(path=paper_path, name='11'), 'w')
 # f.write(klx_paper_render(paper))
 # f.close()
-item_ids = ['571b8cbcdef2970fea808648',
-            '571c7ed2def2970fea80878f',
-            "55de87295417d14e27e0f680",
-            "56a350125417d1720aa074f4", ]
-
-
-def do_items(item_ids, subject):
-    tex = template
-    dbname = subject
-    for item_id in item_ids:
-        tex += item_latex_render(ObjectId(item_id))
-        tex += '\\\\'  # used for multi-items
-    tex += u'\\end{document}'
-    return tex
-
-
-subject = 'klx_ph'
-path = paper_path
-f = open('{}{}.tex'.format(path, '2222'), 'w')
-f.write(do_items(item_ids, subject))
-f.close
+# item_ids = ['571b8cbcdef2970fea808648',
+#             '571c7ed2def2970fea80878f',
+#             "55de87295417d14e27e0f680",
+#             "56a350125417d1720aa074f4",
+#             '561c5e8b5417d17c87713d2d',
+#             ]
+do_multi_items_test(200, 200)
