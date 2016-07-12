@@ -13,664 +13,310 @@ sys.path.append('..')
 import json
 import os
 import urllib
+from pymongo import MongoClient
 
-u'_id':
-    ObjectId('55e517375417d11361cea177')
-u'_id':
-    ObjectId('55efd77b5417d17c877135e4')
-u'_id':
-    ObjectId('5604ac945417d174cb1a3968')
-u'_id':
-    ObjectId('5608fe305417d174cb1a3a0a')
-u'_id':
-    ObjectId('561f47275417d17c87713df3')
-u'_id':
-    ObjectId('561f47275417d17c87713df4')
-u'_id':
-    ObjectId('561f47275417d17c87713df5')
-u'_id':
-    ObjectId('561f4f1f5417d17c87713e01')
-u'_id':
-    ObjectId('561f4f1f5417d17c87713e02')
-u'_id':
-    ObjectId('561f4f1f5417d17c87713e03')
-u'_id':
-    ObjectId('561f569f5417d17c87713e0a')
-u'_id':
-    ObjectId('5620b0ca5417d174cc8281a3')
-u'_id':
-    ObjectId('562dcdad5417d16f1da83db9')
-u'_id':
-    ObjectId('562ecd615417d16f1da83dda')
-u'_id':
-    ObjectId('562ecd615417d16f1da83ddb')
-u'_id':
-    ObjectId('562f13935417d16f1da83e07')
-u'_id':
-    ObjectId('562f36435417d16f1da83e1a')
-u'_id':
-    ObjectId('563183295417d170e6460706')
-u'_id':
-    ObjectId('5636adb55417d16f1da83e9b')
-u'_id':
-    ObjectId('5636cc2d5417d16f1da83eb3')
-u'_id':
-    ObjectId('563963025417d170b097c0e6')
-u'_id':
-    ObjectId('564bd54b5417d16f1da8470b')
-u'_id':
-    ObjectId('56567db85417d170e6460cfc')
-u'_id':
-    ObjectId('5667ee615417d16f1da84d27')
-u'_id':
-    ObjectId('5668f8fb5417d16f1da84d66')
-u'_id':
-    ObjectId('566cec6b5417d170b097c3ea')
-u'_id':
-    ObjectId('5678eb735417d138a0474008')
-u'_id':
-    ObjectId('5678ee9d5417d138a047400a')
-u'_id':
-    ObjectId('567a01b75417d138c612b092')
-u'_id':
-    ObjectId('567bb80d5417d138a047424f')
-u'_id':
-    ObjectId('56949e9c5417d13c3c9bed6d')
-u'_id':
-    ObjectId('5694c0b65417d13c3c9bed82')
-u'_id':
-    ObjectId('5694c0b65417d13c3c9bed8c')
-u'_id':
-    ObjectId('569720cc5417d13c3c9bef7c')
-u'_id':
-    ObjectId('569da1705417d107000342d4')
-u'_id':
-    ObjectId('569ddb1a5417d1070171f2cb')
-u'_id':
-    ObjectId('569f31065417d1070171f33f')
-u'_id':
-    ObjectId('56a1f9c45417d10c05de38f3')
-u'_id':
-    ObjectId('56a6da555417d1070171f3e6')
-u'_id':
-    ObjectId('56a85b025417d10c05de3911')
-u'_id':
-    ObjectId('56ca85e35417d10c05de3ca9')
-u'_id':
-    ObjectId('56ca87875417d10c05de3cc4')
-u'_id':
-    ObjectId('56ca87875417d10c05de3cc5')
-u'_id':
-    ObjectId('56cacf515417d1070171f755')
-u'_id':
-    ObjectId('55dae9f65417d10fb3ae80bc')
-u'_id':
-    ObjectId('55dd76525417d14d2d0866c0')
-u'_id':
-    ObjectId('55dd78e65417d14d2d0866c8')
-u'_id':
-    ObjectId('55dd78e65417d14d2d0866c9')
-u'_id':
-    ObjectId('55dc2da25417d10fb3ae80e4')
-u'_id':
-    ObjectId('55dd1e755417d10fb3ae80fd')
-u'_id':
-    ObjectId('55dd76525417d14d2d0866c2')
-u'_id':
-    ObjectId('55dd76525417d14d2d0866c3')
-u'_id':
-    ObjectId('55ded7685417d14d2d0866e3')
-u'_id':
-    ObjectId('55ded7685417d14d2d0866e5')
-u'_id':
-    ObjectId('55dede705417d14d2d0866ee')
-u'_id':
-    ObjectId('55dd76525417d14d2d0866c1')
-u'_id':
-    ObjectId('55dd78e65417d14d2d0866ca')
-u'_id':
-    ObjectId('55ded7685417d14d2d0866e2')
-u'_id':
-    ObjectId('55ded7685417d14d2d0866e4')
-u'_id':
-    ObjectId('55dfd4a65417d14d2d08671a')
-u'_id':
-    ObjectId('55e6c3395417d17be13a4b5e')
-u'_id':
-    ObjectId('55e3ac015417d114d4baa59c')
-u'_id':
-    ObjectId('55f1523b5417d17c8771363c')
-u'_id':
-    ObjectId('55f669015417d17c8771368b')
-u'_id':
-    ObjectId('56023d3f5417d17c87713995')
-u'_id':
-    ObjectId('5608a8735417d174cb1a3987')
-u'_id':
-    ObjectId('561611815417d174cc8280de')
-u'_id':
-    ObjectId('55fba7275417d17c8771379f')
-u'_id':
-    ObjectId('560353915417d17c87713a81')
-u'_id':
-    ObjectId('5620939d5417d17c87713e19')
-u'_id':
-    ObjectId('5604c2235417d174cc827f88')
-u'_id':
-    ObjectId('562dcdad5417d16f1da83dba')
-u'_id':
-    ObjectId('562dcdad5417d16f1da83dbb')
-u'_id':
-    ObjectId('5604c15c5417d174cb1a396e')
-u'_id':
-    ObjectId('562f36435417d16f1da83e19')
-u'_id':
-    ObjectId('560a4e8a5417d174cc828067')
-u'_id':
-    ObjectId('561611815417d174cc8280df')
-u'_id':
-    ObjectId('563706115417d16f1da83ef1')
-u'_id':
-    ObjectId('561ef6f75417d174cc82814d')
-u'_id':
-    ObjectId('561f569f5417d17c87713e09')
-u'_id':
-    ObjectId('561f569f5417d17c87713e0b')
-u'_id':
-    ObjectId('56371b475417d16f1da83f1b')
-u'_id':
-    ObjectId('5620a3515417d17c87713e30')
-u'_id':
-    ObjectId('5620a3515417d17c87713e31')
-u'_id':
-    ObjectId('5620a3515417d17c87713e32')
-u'_id':
-    ObjectId('561f441b5417d17c87713dee')
-u'_id':
-    ObjectId('561f441b5417d17c87713def')
-u'_id':
-    ObjectId('561f441b5417d17c87713df0')
-u'_id':
-    ObjectId('56386dd15417d170e646094e')
-u'_id':
-    ObjectId('562490585417d174cb1a3cce')
-u'_id':
-    ObjectId('56299b115417d16f1da83d06')
-u'_id':
-    ObjectId('562ecec95417d16f1da83ddd')
-u'_id':
-    ObjectId('562f36435417d16f1da83e16')
-u'_id':
-    ObjectId('562f36435417d16f1da83e17')
-u'_id':
-    ObjectId('56301f955417d16f1da83e20')
-u'_id':
-    ObjectId('562f36435417d16f1da83e18')
-u'_id':
-    ObjectId('5632e5275417d16f1da83e5c')
-u'_id':
-    ObjectId('56330c4b5417d16f1da83e6d')
-u'_id':
-    ObjectId('56330c4b5417d16f1da83e6e')
-u'_id':
-    ObjectId('5636de395417d16f1da83eb6')
-u'_id':
-    ObjectId('56386dd15417d170e646094f')
-u'_id':
-    ObjectId('56459b315417d16f1da84494')
-u'_id':
-    ObjectId('5652c8155417d16f1da84abf')
-u'_id':
-    ObjectId('564d15915417d16f1da84893')
-u'_id':
-    ObjectId('565422f55417d16f1da84bc9')
-u'_id':
-    ObjectId('566bc4625417d170b097c3e3')
-u'_id':
-    ObjectId('566f8a8a5417d170b097c3ef')
-u'_id':
-    ObjectId('566f8a905417d170e6460d72')
-u'_id':
-    ObjectId('566f8a955417d170b097c3f1')
-u'_id':
-    ObjectId('566f8a9c5417d170e6460d74')
-u'_id':
-    ObjectId('566f8aa15417d170b097c3f3')
-u'_id':
-    ObjectId('566f8d535417d170b097c3f5')
-u'_id':
-    ObjectId('566f8d535417d170b097c3f6')
-u'_id':
-    ObjectId('566f8d535417d170b097c3f7')
-u'_id':
-    ObjectId('566f905d5417d16f1da85122')
-u'_id':
-    ObjectId('566f905d5417d16f1da85123')
-u'_id':
-    ObjectId('566fb2775417d16f1da85133')
-u'_id':
-    ObjectId('566fb2775417d16f1da85134')
-u'_id':
-    ObjectId('566fd3295417d16f1da85233')
-u'_id':
-    ObjectId('566fd3295417d16f1da85234')
-u'_id':
-    ObjectId('566fd3295417d16f1da85235')
-u'_id':
-    ObjectId('566fd3295417d16f1da85236')
-u'_id':
-    ObjectId('564e92865417d170b097c314')
-u'_id':
-    ObjectId('5680fb8a5417d10712accbba')
-u'_id':
-    ObjectId('5670ced95417d170e6460deb')
-u'_id':
-    ObjectId('567126e35417d16f1da8538f')
-u'_id':
-    ObjectId('567126e35417d16f1da85390')
-u'_id':
-    ObjectId('566a658d5417d16f1da84e5d')
-u'_id':
-    ObjectId('567214c55417d170b097c4ab')
-u'_id':
-    ObjectId('567214c55417d170b097c4ac')
-u'_id':
-    ObjectId('567214c55417d170b097c4ad')
-u'_id':
-    ObjectId('567221155417d16f1da853c7')
-u'_id':
-    ObjectId('5684dbaa5417d10c43eacd45')
-u'_id':
-    ObjectId('56739f2e5417d160bcb46c24')
-u'_id':
-    ObjectId('5673c12a5417d160bcb46c8e')
-u'_id':
-    ObjectId('5689eda25417d10c43eace22')
-u'_id':
-    ObjectId('568b28fc5417d10c43eace96')
-u'_id':
-    ObjectId('567cd6095417d138c54901bb')
-u'_id':
-    ObjectId('567cdac95417d138c54901cd')
-u'_id':
-    ObjectId('568f2b7e5417d13c3c9beccf')
-u'_id':
-    ObjectId('5695dd275417d10712accda5')
-u'_id':
-    ObjectId('568a27e15417d10c43eace6c')
-u'_id':
-    ObjectId('5695ec5c5417d13c3c9bedec')
-u'_id':
-    ObjectId('569718fe5417d10712accdfd')
-u'_id':
-    ObjectId('569718fe5417d10712accdfe')
-u'_id':
-    ObjectId('569f00c15417d10c05de35d8')
-u'_id':
-    ObjectId('569f38e35417d10c05de3661')
-u'_id':
-    ObjectId('56a052f45417d10c05de3733')
-u'_id':
-    ObjectId('56a86c4a5417d10700034453')
-u'_id':
-    ObjectId('56a0482c5417d10c05de370b')
-u'_id':
-    ObjectId('56a6d9545417d1070171f3e1')
-u'_id':
-    ObjectId('56a86b875417d10700034450')
-u'_id':
-    ObjectId('56a9bd735417d107000344a0')
-u'_id':
-    ObjectId('56b04cb25417d1070171f569')
-u'_id':
-    ObjectId('56d7aa2d5417d15af09d5a9f')
-u'_id':
-    ObjectId('56d7ce635417d15af09d5ac0')
-u'_id':
-    ObjectId('56d7dfcd5417d1544c6b78a8')
-u'_id':
-    ObjectId('56caa1ed5417d1070171f71f')
-u'_id':
-    ObjectId('56cabc685417d10700034738')
-u'_id':
-    ObjectId('56cd7f235417d10c05de3cfd')
-u'_id':
-    ObjectId('56d01a2b5417d10c05de3eaa')
-u'_id':
-    ObjectId('56ca9de85417d10c05de3cce')
-u'_id':
-    ObjectId('56ca9fab5417d10c05de3cdd')
-u'_id':
-    ObjectId('56ce6ee65417d1070171f82f')
-u'_id':
-    ObjectId('56ce9f2e5417d10c05de3dc4')
-u'_id':
-    ObjectId('56d8de075417d15af09d5bd7')
-u'_id':
-    ObjectId('56d8df6f5417d15af09d5bf4')
-u'_id':
-    ObjectId('56d8ed435417d15af09d5c5d')
-u'_id':
-    ObjectId('56d1cc745417d10b76e5f15d')
-u'_id':
-    ObjectId('56de96c15417d15af09d5cc8')
-u'_id':
-    ObjectId('56de98485417d15af09d5cd3')
-u'_id':
-    ObjectId('56de99195417d15af09d5cd4')
-u'_id':
-    ObjectId('56de997a5417d1544c6b794b')
-u'_id':
-    ObjectId('56de9c9d5417d15af09d5cda')
-u'_id':
-    ObjectId('56de9c9d5417d15af09d5cdb')
-u'_id':
-    ObjectId('56de9c9d5417d15af09d5cdc')
-u'_id':
-    ObjectId('56de9d335417d15af09d5ce2')
-u'_id':
-    ObjectId('56de9e055417d15af09d5ced')
-u'_id':
-    ObjectId('56de9e7d5417d15af09d5cf7')
-u'_id':
-    ObjectId('56de9e7d5417d15af09d5cf8')
-u'_id':
-    ObjectId('56de9f0b5417d1544c6b7951')
-u'_id':
-    ObjectId('56de9f315417d15af09d5d01')
-u'_id':
-    ObjectId('56de9f315417d15af09d5d02')
-u'_id':
-    ObjectId('56de9f315417d15af09d5d03')
-u'_id':
-    ObjectId('56de9fc75417d15af09d5d0a')
-u'_id':
-    ObjectId('56de9fc75417d15af09d5d0c')
-u'_id':
-    ObjectId('56dea05d5417d15af09d5d16')
-u'_id':
-    ObjectId('56dea0d55417d15af09d5d1d')
-u'_id':
-    ObjectId('56dea2795417d15af09d5d2e')
-u'_id':
-    ObjectId('56dea2795417d15af09d5d2f')
-u'_id':
-    ObjectId('56dea2795417d15af09d5d30')
-u'_id':
-    ObjectId('56e15eb65417d1378224be99')
-u'_id':
-    ObjectId('56e60bbd5417d15af09d5fc8')
-u'_id':
-    ObjectId('56fa2a54def297556d29dda7')
-u'_id':
-    ObjectId('56fe1bc8def297556d29deca')
-u'_id':
-    ObjectId('570757c55417d1544c6b7dac')
-u'_id':
-    ObjectId('57075d705417d15472930922')
-u'_id':
-    ObjectId('5722bb48def2976d54a5aaf7')
-u'_id':
-    ObjectId('56fe0ed35417d1547293080d')
-u'_id':
-    ObjectId('56fe28c05417d1544c6b7cd8')
-u'_id':
-    ObjectId('56f22e615417d15af09d659e')
-u'_id':
-    ObjectId('56fc7336def297556d29de6b')
-u'_id':
-    ObjectId('56fc74bd5417d154729307e3')
-u'_id':
-    ObjectId('5704ae835417d15af09d6798')
-u'_id':
-    ObjectId('5704aebf5417d15af09d679d')
-u'_id':
-    ObjectId('5704a5415417d15af09d673a')
-u'_id':
-    ObjectId('5704ab1d5417d15af09d6754')
-u'_id':
-    ObjectId('5704ab1d5417d15af09d6758')
-u'_id':
-    ObjectId('5704b18f5417d15af09d6811')
-u'_id':
-    ObjectId('5717566edef29772a1e6a5d4')
-u'_id':
-    ObjectId('5717566edef29772a1e6a5d5')
-u'_id':
-    ObjectId('57189b43def29772a1e6a5ec')
-u'_id':
-    ObjectId('57189b43def29772a1e6a5ef')
-u'_id':
-    ObjectId('571f2466def29763faaddb68')
-u'_id':
-    ObjectId('5720205edef2976d54a5a969')
-u'_id':
-    ObjectId('57202dd8def2976d54a5aa2c')
-u'_id':
-    ObjectId('57202f40def2976d54a5aa64')
-u'_id':
-    ObjectId('57202f5edef2976d54a5aa6f')
-u'_id':
-    ObjectId('5722cb4cdef29763faaddc4f')
-u'_id':
-    ObjectId('57314564def2976d54a5aed8')
-u'_id':
-    ObjectId('57342a04def2976d54a5b158')
-u'_id':
-    ObjectId('57342a04def2976d54a5b159')
-u'_id':
-    ObjectId('573430c2def29763faadde8f')
-u'_id':
-    ObjectId('57343f1cdef2976d54a5b264')
-u'_id':
-    ObjectId('5735682edef2976d54a5b340')
-u'_id':
-    ObjectId('5735682edef2976d54a5b342')
-u'_id':
-    ObjectId('57342824def2976d54a5b102')
-u'_id':
-    ObjectId('573576f2def2976d54a5b3c8')
-u'_id':
-    ObjectId('5735718edef2976d54a5b384')
-u'_id':
-    ObjectId('57357512def2976d54a5b3ae')
-u'_id':
-    ObjectId('57357512def2976d54a5b3b1')
-u'_id':
-    ObjectId('573576f2def2976d54a5b3c3')
-u'_id':
-    ObjectId('5704ab955417d15af09d675e')
-u'_id':
-    ObjectId('5704b2445417d15af09d683f')
-u'_id':
-    ObjectId('5731445bdef29763faadddac')
-u'_id':
-    ObjectId('573c054edef2976d54a5b5c8')
-u'_id':
-    ObjectId('573c054edef2976d54a5b5cb')
-u'_id':
-    ObjectId('573d710edef2976d54a5b703')
-u'_id':
-    ObjectId('57357aeedef2976d54a5b3ed')
-u'_id':
-    ObjectId('5754cfd4def2976d54a5b844')
-u'_id':
-    ObjectId('5754d9cadef2976d54a5b8c8')
-u'_id':
-    ObjectId('5754dad8def2976d54a5b8df')
-u'_id':
-    ObjectId('573adcf0def2976d54a5b419')
-u'_id':
-    ObjectId('573add86def2976d54a5b441')
-u'_id':
-    ObjectId('573addfedef2976d54a5b450')
-u'_id':
-    ObjectId('575cd3aadef2976d54a5b958')
-u'_id':
-    ObjectId('575cd3aadef2976d54a5b95a')
-u'_id':
-    ObjectId('575cd440def2976d54a5b964')
-u'_id':
-    ObjectId('573c054edef2976d54a5b5c9')
-u'_id':
-    ObjectId('573c054edef2976d54a5b5ca')
-u'_id':
-    ObjectId('575e21a6def2976d54a5b9c8')
-u'_id':
-    ObjectId('575e238fdef29763faade1fe')
-u'_id':
-    ObjectId('575e245bdef29763e1829893')
-u'_id':
-    ObjectId('575e2582def29763faade223')
-u'_id':
-    ObjectId('575e26c2def29763e18298c9')
-u'_id':
-    ObjectId('575e594bdef29763faade26b')
-u'_id':
-    ObjectId('575e5cf2def2976d54a5b9e2')
-u'_id':
-    ObjectId('5760a37cdef2976d54a5bad8')
-u'_id':
-    ObjectId('5761ee4edef2976d54a5bb73')
-u'_id':
-    ObjectId('5761ee4edef2976d54a5bb74')
-u'_id':
-    ObjectId('576267d8def29763e1829ad2')
-u'_id':
-    ObjectId('57626a1ddef29763e1829b3b')
-u'_id':
-    ObjectId('573d710edef2976d54a5b704')
-u'_id':
-    ObjectId('573d72b2def2976d54a5b73f')
-u'_id':
-    ObjectId('5754dd4edef2976d54a5b915')
-u'_id':
-    ObjectId('5754de98def2976d54a5b934')
-u'_id':
-    ObjectId('5754df2edef2976d54a5b93b')
-u'_id':
-    ObjectId('575cd3aadef2976d54a5b95b')
-u'_id':
-    ObjectId('575cd3aadef2976d54a5b95c')
-u'_id':
-    ObjectId('575cd3e6def2976d54a5b95f')
-u'_id':
-    ObjectId('575cd3e6def2976d54a5b960')
-u'_id':
-    ObjectId('575cd4b8def2976d54a5b96f')
-u'_id':
-    ObjectId('575cd4b8def2976d54a5b972')
-u'_id':
-    ObjectId('575e22c7def29763faade1d5')
-u'_id':
-    ObjectId('575e26c2def29763e18298b5')
-u'_id':
-    ObjectId('575e26c2def29763e18298c5')
-u'_id':
-    ObjectId('575e593cdef29763faade25c')
-u'_id':
-    ObjectId('5754d0e2def2976d54a5b862')
-u'_id':
-    ObjectId('5754dd4edef2976d54a5b922')
-u'_id':
-    ObjectId('5761ed9adef2976d54a5bb63')
-u'_id':
-    ObjectId('5761ed9adef2976d54a5bb68')
-u'_id':
-    ObjectId('5761ee4edef2976d54a5bb76')
-u'_id':
-    ObjectId('575cd3aadef2976d54a5b959')
-u'_id':
-    ObjectId('575cd440def2976d54a5b963')
-u'_id':
-    ObjectId('575cd45edef2976d54a5b968')
-u'_id':
-    ObjectId('575cd45edef2976d54a5b969')
-u'_id':
-    ObjectId('575cd45edef2976d54a5b96a')
-u'_id':
-    ObjectId('575e1990def2976d54a5b978')
-u'_id':
-    ObjectId('575e1fc6def2976d54a5b9ae')
-u'_id':
-    ObjectId('575e205cdef2976d54a5b9b5')
-u'_id':
-    ObjectId('57625f0adef2976d54a5bbd2')
-u'_id':
-    ObjectId('576261bcdef2976d54a5bc0b')
-u'_id':
-    ObjectId('5762664bdef29763faade3c0')
-u'_id':
-    ObjectId('575e54bedef2976d54a5b9cc')
-u'_id':
-    ObjectId('575e5db4def29763e18299a0')
-u'_id':
-    ObjectId('57626a55def29763faade481')
-u'_id':
-    ObjectId('576784b2def2976d54a5bce0')
-u'_id':
-    ObjectId('576784b2def2976d54a5bceb')
-u'_id':
-    ObjectId('5761ed9adef2976d54a5bb6a')
-u'_id':
-    ObjectId('5761ee4edef2976d54a5bb72')
-u'_id':
-    ObjectId('5761ee4edef2976d54a5bb75')
-u'_id':
-    ObjectId('57626504def2976d54a5bc6d')
-u'_id':
-    ObjectId('576784b2def2976d54a5bce2')
-u'_id':
-    ObjectId('57678affdef29763faade4c5')
-u'_id':
-    ObjectId('5768856edef29763e1829bc4')
-u'_id':
-    ObjectId('575cd3e6def2976d54a5b95e')
-u'_id':
-    ObjectId('575cd3e6def2976d54a5b961')
-u'_id':
-    ObjectId('575e1990def2976d54a5b979')
-u'_id':
-    ObjectId('575e1c60def2976d54a5b987')
-u'_id':
-    ObjectId('575e26c2def29763e18298c8')
-u'_id':
-    ObjectId('575e294cdef29763e1829924')
-u'_id':
-    ObjectId('5760a7bbdef29763faade33d')
-u'_id':
-    ObjectId('5761ed9adef2976d54a5bb69')
-u'_id':
-    ObjectId('57625d84def2976d54a5bbb3')
-u'_id':
-    ObjectId('57625e56def2976d54a5bbba')
-u'_id':
-    ObjectId('57626126def2976d54a5bbff')
-u'_id':
-    ObjectId('57626432def2976d54a5bc49')
-u'_id':
-    ObjectId('57674b52def29763faade492')
-u'_id':
-    ObjectId('57732236def2976d54a5be2e')
-u'_id':
-    ObjectId('5773268cdef2976d54a5be3c')
-u'_id':
-    ObjectId('5773268cdef2976d54a5be3d')
-u'_id':
-    ObjectId('57732770def29763e1829bd3')
-u'_id':
-    ObjectId('57735ff8def2976d54a5be65')
-u'_id':
-    ObjectId('577360e8def2976d54a5be73')
-u'_id':
-    ObjectId('577360e8def2976d54a5be74')
-u'_id':
-    ObjectId('577360e8def2976d54a5be75')
-u'_id':
-    ObjectId('577360e8def2976d54a5be76')
-u'_id':
-    ObjectId('577360e8def2976d54a5be77')
-u'_id':
-    ObjectId('577360e8def2976d54a5be78')
-u'_id':
-    ObjectId('57746dbadef29763faade570')
+width_map = {
+    1001: '125.46652mm',
+    1002: '100.894444444mm',
+    1003: '161.928mm',
+    2001: '125.46652mm',
+    2002: '100.894444444mm',
+    2003: '161.928mm',
+    2004: '100.894444444mm',
+    2005: '161.928mm',
+    2006: '100.894444444mm',
+    2007: '161.928mm',
+    2008: '161.928mm',
+    2009: '161.928mm',
+}
+
+pdf_width = u'125.46652mm'
+img_url = 'http://www.kuailexue.com/data/img/'
+
+itmtyp_2_name = {1001: '选择题',
+                 1002: '填空题',
+                 1003: '解答题',
+                 2001: '选择题',
+                 2002: '填空题',
+                 2003: '解答题',
+                 2004: '实验题',
+                 2005: '模块选做题',
+                 2006: '作图题',
+                 2007: '科普阅读题',
+                 2008: '简答题',
+                 2009: '计算题',
+                 2010: '综合应用题',
+                 }
+
+client = MongoClient('10.0.0.100', 27017)
+dbname = 'klx_math'
+db = client[dbname]
+
+
+subject = 'klx_math'
+paper_path = '../papers'
+item_path = '../items'
+# img_path = '../imgs/'
+img_path = '/Users/zhangyingjie/var/data/img'
+# img_re2 = re.compile(ur'\n\[\[img\]\].*?\[\[/img\]\]')
+img_re2 = re.compile(ur'\[\[img\]\].*?\[\[/img\]\]')  # used for desc imgs
+# used for delete imgs urls
+img_re3 = re.compile(ur'\n?\s?\u200b?\[\[img\]\].*?\[\[/img\]\]')
+img_file_re = re.compile(ur'\w+\.(?:png|jpg|gif|bmp|jpeg)')
+
+desc = u'利用计算器[[img]]{"src":"8253afe639af7dd55c4502177c62de02.png"}[[/img]]求 \( \sin 30^\circ \) 时，依次按键[[img]]{"src":"4b62a164e3086670c8f0269ba9076ecc.png"}[[/img]]则计算器上显示的结果是[[nn]]利用计算器求 \\( \\sin 30^\\circ \\) 时，依次按键[[img]]{\"src\": \"328dd2c165c9191e95070ccf47da7f7b.png\"}[[/img]]则计算器上显示的结果是 \\(\\left(\\qquad\\right)\\)'
+
+
+def punc_in_img(s):  # by ningshuo
+    def _deal(s):
+        stop = s.find(ur'[[/img]]')
+        assert stop != -1
+        result = re.sub(ur'\uff0e',
+                        ur'.', s[:stop])
+        result = re.sub(ur'\uff1a',
+                        ur':', result)
+        result = re.sub(ur'\uff0c',
+                        ur',', result)
+        return result + s[stop:]
+
+    s = re.split(ur'\[\[img\]\]', s)
+    for idx, str in enumerate(s[1:], start=1):
+        s[idx] = _deal(str)
+    s = ur'[[img]]'.join(s)
+    return s
+
+
+def str2latex(ori):
+    def array_mathmode(s):
+        def _array_math_display(s):
+            s = re.sub(
+                ur'\\begin\s?{array}[\s\S]*?\\end\s?{array}', lambda x: ur'\[%s\]' % x.group(), s)
+            return s
+
+        def _dealdisplay(s):
+            stop = s.find(ur'\]')
+            if stop == -1:
+                s = _array_math_display(s)
+            else:
+                math = s[:stop]
+                text = s[stop:]
+                text = _array_math_display(text)
+                s = math + text
+            return s
+
+        def _dealinline(s):
+            stop = s.find(ur'\)')
+            if stop == -1:
+                s = re.split(ur'(?<!\\)\\\[', s)
+                for idx, str in enumerate(s, start=0):
+                    s[idx] = _dealdisplay(str)
+                s = ur'\['.join(s)
+            else:
+                math = s[:stop]
+                k = s[stop:]
+                k = re.split(ur'(?<!\\)\\\[', k)
+                for idx, str in enumerate(k, start=0):
+                    k[idx] = _dealdisplay(str)
+                k = ur'\['.join(k)
+                s = math + k
+            return s
+
+        s = re.split(ur'(?<!\\)\\\(', s)
+        for idx, str in enumerate(s, start=0):
+            s[idx] = _dealinline(str)
+        s = ur'\('.join(s)
+        return s
+
+    def cn_in_mathmode(s):  # by ningshuo
+
+        def _deal_mathmode(s):
+            s = re.sub(ur'[\u4e00-\u9fa5]+',
+                       lambda x: ur'\text{%s}' % x.group(), s)
+            return s
+
+        def _deal_textmode(s):
+
+            s = s.replace(u'\n', u'\\\\\n')
+            s = re.sub(ur'(?<!\\)&', u'\\&', s)
+            return s
+
+        def _dealdisplay(s):
+            stop = s.find(ur'\]')
+            if stop == -1:
+                s = _deal_textmode(s)
+            else:
+                math = s[:stop]
+                math = _deal_mathmode(math)
+                text = s[stop:]
+                text = _deal_textmode(text)
+                s = math + text
+            return s
+
+        def _dealinline(s):
+            stop = s.find(ur'\)')
+            if stop == -1:
+                s = re.split(ur'(?<!\\)\\\[', s)
+                for idx, str in enumerate(s, start=0):
+                    s[idx] = _dealdisplay(str)
+                s = ur'\['.join(s)
+            else:
+                math = s[:stop]
+                math = _deal_mathmode(math)
+                k = s[stop:]
+                k = re.split(ur'(?<!\\)\\\[', k)
+                for idx, str in enumerate(k, start=0):
+                    k[idx] = _dealdisplay(str)
+                k = ur'\['.join(k)
+                s = math + k
+            return s
+
+        s = array_mathmode(s)
+        s = re.split(ur'(?<!\\)\\\(', s)
+        for idx, str in enumerate(s, start=0):
+            s[idx] = _dealinline(str)
+        s = ur'\('.join(s)
+        s = s.replace(u'\\\\\n\[', u'\n\[')
+        s = s.replace(u'\]\\\\\n', u'\]\n')
+        return s
+
+    def array_col_correction(x):
+        x.group(0).split('\\\\')[0]
+        col_num = len(re.findall(ur'(?<!\\)&', x.group(0).split('\\\\')[0]
+                                 )) + 1
+        col_arg_center = 'c' * col_num
+        col_arg_left = 'l' * col_num
+        col_arg_lined = ur'|' + ur'c|' * col_num
+        s = re.sub(ur'{c+}', '{%s}' % col_arg_center, x.group(0))
+        s = re.sub(ur'{\|c\|.*?}', '{%s}' % col_arg_lined, s)
+        s = re.sub(ur'{l+}', '{%s}' % col_arg_left, s)
+        return s
+
+    def split_mathmode(x):
+        x = re.sub(ur'split', ur'aligned', x.group(0))
+        return x
+
+    def unicode_2_latex(s):
+        unicode2latex = [
+            (ur'\u2460', ur'{\text{\ding{172}}}'),
+            (ur'\u2461', ur'{\text{\ding{173}}}'),
+            (ur'\u2462', ur'{\text{\ding{174}}}'),
+            (ur'\u2463', ur'{\text{\ding{175}}}'),
+            (ur'\u2464', ur'{\text{\ding{176}}}'),
+            (ur'\u2465', ur'{\text{\ding{177}}}'),
+            (ur'\u2466', ur'{\text{\ding{178}}}'),
+            (ur'\u2467', ur'{\text{\ding{179}}}'),
+            (ur'\u2468', ur'{\text{\ding{180}}}'),
+            (ur'\u2469', ur'{\text{\ding{181}}}'),
+            (ur'\u2160', ur'\text{$\mathrm{I}$}'),
+            (ur'\u2161', ur'\text{$\mathrm{II}$}'),
+            (ur'\u2162', ur'\text{$\mathrm{III}$}'),
+            (ur'\u2163', ur'\text{$\mathrm{IV}$}'),
+            (ur'\u2164', ur'\text{$\mathrm{V}$}'),
+            (ur'\u2165', ur'\text{$\mathrm{VI}$}'),
+            (ur'\u2166', ur'\text{$\mathrm{VII}$}'),
+            (ur'\u2167', ur'\text{$\mathrm{VIII}$}'),
+            (ur'\u2168', ur'\text{$\mathrm{IX}$}'),
+            (ur'\u2169', ur'\text{$\mathrm{X}$}'),
+            (ur'\u00a0', ur' '),
+            (ur'\overparen', ur'\wideparen'),
+            (ur'\lt', ur'<'),
+            (ur'\gt', ur'>'),
+            (ur'\u007f', ur''),
+            (ur'{align}', ur'{matrix}'),
+            (ur'{split}', ur'{aligned}'),
+            (ur'\uff1d', ur'='),
+            (ur'\Omega', ur'\text{$\Omega$}'),
+            (ur'\style{font-family:Times New Roman}{g}', ur'\textsl{g}'),
+            (ur'_\rm', ur'_\phrm'),
+            (ur'^\rm', ur'^\phrm'),
+            (ur'[[nn]]', ur'\dd '),
+            (ur'\u200b', ur''),
+        ]
+        for uni, latex in unicode2latex:
+            s = s.replace(uni, latex)
+        return s
+    ori = unicode_2_latex(ori)
+    ori = re.sub(img_re3, ur'', ori)
+    ori = re.sub(ur'(?<!(?:\\|%))%', ur'\%', ori)
+    ori = cn_in_mathmode(ori)
+    ori = re.sub(
+        ur'\\begin\s?{array}[\s\S]*?\\end\s?{array}', array_col_correction, ori)
+    ori = re.sub(ur'\u005f\u005f+', ur'\\dd ', ori)
+    ori = ori.replace(u'\n\n', '\n')
+    return ori
+
+
+def deal_with_img(s):
+    img = s.group(0)
+    img = punc_in_img(img)
+    scale = 0.7
+    scale = 0.5
+    img_file = re.findall(img_file_re, img)[0]
+    file_path_name = os.path.join(img_path, img_file)
+    if not os.path.isfile(file_path_name):
+        urllib.urlretrieve('{}{}'.format(
+            img_url, img_file), file_path_name)
+        print img_file
+    if 'src' in img:  # 可能不严谨，咨询过相信
+        img_json = json.loads(img[7:-8])
+    else:
+        img_json = ''
+    im = Image.open(file_path_name)
+    size = []
+
+    if 'height' not in img_json:
+        if 'width' not in img_json:
+            size_w = im.size[0] * scale
+            size_h = im.size[1] * scale
+        else:
+            size_w = int(img_json['width']) * scale
+            mag = size_w / im.size[0]
+            size_h = im.size[1] * mag
+    else:
+        if 'width' not in img_json:
+            size_h = int(img_json['height']) * scale
+            mag = size_h / im.size[1]
+            size_w = im.size[0] * mag
+        else:
+            size_w = int(img_json['width']) * scale
+            size_h = int(img_json['height']) * scale
+    size.append('width=%spt' % size_w)
+    size.append('height=%spt' % size_h)
+    size_tex = ','.join(size)
+    raise_height = 0.5 * size_h - 1.6  # 用来对齐行内图片
+    # print size_tex
+    if size_w > 365:  # img display zoom
+        img_tex = u'\\includegraphics[width=\\optwidth]{{{}}}'.format(
+            file_path_name)
+    elif size_h < 30:  # img inline
+        img_tex = u'[[inline]]\ \\raisebox{{-{}pt}}{{\\includegraphics[{}]{{{}}}}}\ [[/inline]]'.format(
+            raise_height, size_tex, file_path_name)
+    elif size_w > 200:  # img display real
+        img_tex = u'\\includegraphics[{}]{{{}}}'.format(
+            size_tex, file_path_name)
+    else:  # img inpar
+        img_tex = u'[[inpar]]\\includegraphics[{}]{{{}}}[[/inpar]]'.format(
+            size_tex, file_path_name)
+    return img_tex
+
+
+def deal_desc_img(desc):
+    result = {
+        'text': '',
+        'imgs': '',
+    }
+    desc = punc_in_img(desc)
+    s = re.sub(img_re2, deal_with_img, desc)
+    print s
+    print '+++++++'
+    img_inpar = re.findall(ur'\[\[inpar\]\](.*?)\[\[/inpar\]\]', s)
+    desc_text = re.sub(ur'\[\[inpar\]\](.*?)\[\[/inpar\]\]', u'', s)
+    desc_text = re.sub(
+        ur'\[\[inline\]\](.*?)\[\[/inline\]\]', lambda x: x.group(1), desc_text)
+    print img_inpar
+    img_inpar = u''.join(img_inpar)
+    result['imgs'] = img_inpar
+    result['text'] = str2latex(desc_text)
+    return result
+
+print deal_desc_img(desc)['text']

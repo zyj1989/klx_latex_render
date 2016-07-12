@@ -206,6 +206,60 @@ def punc_in_img(s):  # by ningshuo
     return s
 
 
+def deal_with_img(s):
+    img = s.group(0)
+    img = punc_in_img(img)
+    scale = 0.7
+    scale = 0.5
+    img_file = re.findall(img_file_re, img)[0]
+    file_path_name = os.path.join(img_path, img_file)
+    if not os.path.isfile(file_path_name):
+        urllib.urlretrieve('{}{}'.format(
+            img_url, img_file), file_path_name)
+        print img_file
+    if 'src' in img:  # 可能不严谨，咨询过相信
+        img_json = json.loads(img[7:-8])
+    else:
+        img_json = ''
+    im = Image.open(file_path_name)
+    size = []
+
+    if 'height' not in img_json:
+        if 'width' not in img_json:
+            size_w = im.size[0] * scale
+            size_h = im.size[1] * scale
+        else:
+            size_w = int(img_json['width']) * scale
+            mag = size_w / im.size[0]
+            size_h = im.size[1] * mag
+    else:
+        if 'width' not in img_json:
+            size_h = int(img_json['height']) * scale
+            mag = size_h / im.size[1]
+            size_w = im.size[0] * mag
+        else:
+            size_w = int(img_json['width']) * scale
+            size_h = int(img_json['height']) * scale
+    size.append('width=%spt' % size_w)
+    size.append('height=%spt' % size_h)
+    size_tex = ','.join(size)
+    raise_height = 0.5 * size_h - 1.6  # 用来对齐行内图片
+    # print size_tex
+    if size_w > 365:  # img display zoom
+        img_tex = u'\\includegraphics[width=\\optwidth]{{{}}}'.format(
+            file_path_name)
+    elif size_h < 30:  # img inline
+        img_tex = u'[[inline]]\ \\raisebox{{-{}pt}}{{\\includegraphics[{}]{{{}}}}}\ [[/inline]]'.format(
+            raise_height, size_tex, file_path_name)
+    elif size_w > 200:  # img display real
+        img_tex = u'\\includegraphics[{}]{{{}}}'.format(
+            size_tex, file_path_name)
+    else:  # img inpar
+        img_tex = u'[[inpar]]\\includegraphics[{}]{{{}}}[[/inpar]]'.format(
+            size_tex, file_path_name)
+    return img_tex
+
+
 def get_opts_head(opts):
     opt_imgs_cnt = 0
     if len(opts) == 3:
@@ -256,55 +310,18 @@ def deal_desc_img(desc):
         'imgs': '',
     }
     desc = punc_in_img(desc)
-    desc_imgs = re.findall(img_re2, desc)
-    scale = 0.7
-    scale = 0.5
-    img_inpar_tex = ''
-    img_display_tex = ''
-    img_inline_tex = ''
-    for desc_img in desc_imgs:
-        img_file = re.findall(img_file_re, desc_img)[0]
-        file_path_name = os.path.join(img_path, img_file)
-        if not os.path.isfile(file_path_name):
-            urllib.urlretrieve('{}{}'.format(
-                img_url, img_file), file_path_name)
-            print img_file
-        if 'src' in desc_img:
-            img_json = json.loads(desc_img[7:-8])
-        else:
-            img_json = ''
-        im = Image.open(file_path_name)
-        size = []
-        print img_json
+    s = re.sub(img_re2, deal_with_img, desc)
+    print s
+    print '+++++++'
+    img_inpar = re.findall(ur'\[\[inpar\]\](.*?)\[\[/inpar\]\]', s)
+    desc_text = re.sub(ur'\[\[inpar\]\](.*?)\[\[/inpar\]\]', u'', s)
+    desc_text = re.sub(
+        ur'\[\[inline\]\](.*?)\[\[/inline\]\]', lambda x: x.group(1), desc_text)
+    print img_inpar
+    img_inpar = u''.join(img_inpar)
 
-        if 'width' in img_json:
-            size_w = int(img_json['width']) * scale
-            size.append('width={}pt'.format(str(size_w)))
-        else:
-            size_w = im.size[0]
-
-        if 'height' in img_json:
-            size_h = int(img_json['height']) * scale
-            size.append('height={}pt'.format(str(size_h)))
-        else:
-            size_h = im.size[1]
-
-        size_tex = ','.join(size)
-        print size
-        if size_w > 201 and size_w < 501:
-            img_display_tex += u'\\includegraphics[{}]{{{}}}'.format(
-                size_tex, file_path_name)
-        elif size_w > 500:
-            img_display_tex += u'\\includegraphics[width=\\optwidth]{{{}}}'.format(
-                file_path_name)
-        else:
-            img_inpar_tex += u'\\includegraphics[{}]{{{}}}'.format(
-                size_tex, file_path_name)
-    desc_tex = re.sub(img_re3, ur'', desc)
-    if img_display_tex != '':
-        desc_tex += u'\\newline %s' % img_display_tex
-    result['imgs'] = img_inpar_tex
-    result['text'] = str2latex(desc_tex)
+    result['imgs'] = img_inpar
+    result['text'] = str2latex(desc_text)
     return result
 
 
@@ -554,7 +571,9 @@ item_ids = [  # math
     # # '54f52f640045fe3e0e5324f5',
     # '56e91a9f5417d15b16270324',
     '5368a442e13823417ff9bc67',
-    '54364cb30045fe48f83730ee'
+    '54364cb30045fe48f83730ee',
+    '56d9474b5417d15b1626fe2e',
+    '56de8abd5417d15e130f8bbf'
 
 ]
 # do_multi_items_test(54687, 500)
