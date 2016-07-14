@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
 # encoding:utf-8
 '''
 item render with minipage 
@@ -207,17 +207,17 @@ def punc_in_img(s):  # by ningshuo
 
 
 def deal_with_img(s):
-    img = s.group(0)
+    img = s.group(1)
     img = punc_in_img(img)
     scale = 0.7
-    scale = 0.5
+    scale = 0.6
     img_file = re.findall(img_file_re, img)[0]
     file_path_name = os.path.join(img_path, img_file)
     if not os.path.isfile(file_path_name):
         urllib.urlretrieve('{}{}'.format(
             img_url, img_file), file_path_name)
         print img_file
-    if 'src' in img:  # 可能不严谨，咨询过相信
+    if 'src' in img:  # ¿ÉÄÜ²»ÑÏ½÷£¬×ÉÑ¯¹ýÏàÐÅ
         img_json = json.loads(img[7:-8])
     else:
         img_json = ''
@@ -243,16 +243,17 @@ def deal_with_img(s):
     size.append('width=%spt' % size_w)
     size.append('height=%spt' % size_h)
     size_tex = ','.join(size)
-    raise_height = 0.5 * size_h - 1.6  # 用来对齐行内图片
+    raise_height = 0.5 * size_h - 1.6  #
+    print size_w, size_h
     # print size_tex
     if size_w > 365:  # img display zoom
-        img_tex = u'\\includegraphics[width=\\optwidth]{{{}}}'.format(
+        img_tex = u'[[display]]\\includegraphics[width=\\optwidth]{{{}}}[[/display]]'.format(
             file_path_name)
-    elif size_h < 30:  # img inline
+    elif size_h < 25:  # img inline
         img_tex = u'[[inline]]\ \\raisebox{{-{}pt}}{{\\includegraphics[{}]{{{}}}}}\ [[/inline]]'.format(
             raise_height, size_tex, file_path_name)
     elif size_w > 200:  # img display real
-        img_tex = u'\\includegraphics[{}]{{{}}}'.format(
+        img_tex = u'[[display]]\\includegraphics[{}]{{{}}}[[/display]]'.format(
             size_tex, file_path_name)
     else:  # img inpar
         img_tex = u'[[inpar]]\\includegraphics[{}]{{{}}}[[/inpar]]'.format(
@@ -262,6 +263,7 @@ def deal_with_img(s):
 
 def get_opts_head(opts):
     opt_imgs_cnt = 0
+    opt_imgs_inline_cnt = 0
     if len(opts) == 3:
         result = '\\trech'
     elif len(opts) == 5:
@@ -269,11 +271,16 @@ def get_opts_head(opts):
     elif len(opts) == 4:
         for opt in opts:
             opt = punc_in_img(opt)
+            opt = re.sub(img_re3, deal_with_img, opt)
             opt_imgs = re.findall(img_file_re, opt)
+            opt_imgs_inline = re.findall(
+                ur'\[\[inline\]\].*?\[\[/inline\]\]', opt)
             if opt_imgs:
                 opt_imgs_cnt += 1
-            opt = re.sub(img_re3, '', opt)
-        if opt_imgs_cnt == 4:
+            if opt_imgs_inline:
+                opt_imgs_inline_cnt += 1
+
+        if opt_imgs_cnt == 4 and opt_imgs_inline_cnt != 4:
             result = '\\imgch'
         else:
             result = '\\ch'
@@ -300,7 +307,6 @@ def get_opt_img(opt, img_width):
             opt_img = '\\includegraphics[{}={}\\optwidth]{{{}}}'.format(
                 arg, img_width, os.path.join(img_path, img_file))
     opt = re.sub(img_re3, '', opt)
-    # opt = re.sub(ur'\n', '', opt)
     return [opt, opt_img]
 
 
@@ -310,19 +316,51 @@ def deal_desc_img(desc):
         'imgs': '',
     }
     desc = punc_in_img(desc)
-    s = re.sub(img_re2, deal_with_img, desc)
-    print s
-    print '+++++++'
+    s = re.sub(img_re3, deal_with_img, desc)
     img_inpar = re.findall(ur'\[\[inpar\]\](.*?)\[\[/inpar\]\]', s)
     desc_text = re.sub(ur'\[\[inpar\]\](.*?)\[\[/inpar\]\]', u'', s)
     desc_text = re.sub(
         ur'\[\[inline\]\](.*?)\[\[/inline\]\]', lambda x: x.group(1), desc_text)
-    print img_inpar
+    desc_text = re.sub(
+        ur'\[\[display\]\](.*?)\[\[/display\]\]', lambda x: x.group(1), desc_text)
     img_inpar = u''.join(img_inpar)
 
     result['imgs'] = img_inpar
     result['text'] = str2latex(desc_text)
     return result
+
+
+def deal_with_opt(opt, img_width, opts_head):
+    opt = punc_in_img(opt)
+    opt = re.sub(img_re3, deal_with_img, opt)
+    if opts_head == '\\imgch':
+        opt_text = re.sub(img_display_pattern, '', opt)
+        opt_text = re.sub(img_inpar_pattern, '', opt_text)
+        opt_text = re.sub(img_inline_pattern, '', opt_text)
+        opt_imgs = re.findall(ur'\]\](.*?)\[\[/', opt)
+        opt_imgs = u''.join(opt_imgs)
+        size_w = re.findall(ur'\[width=(.*?)pt', opt_imgs)
+        size_h = re.findall(ur',height=(.*?)pt\]', opt_imgs)
+        size_w = float(u''.join(size_w))
+        size_h = float(u''.join(size_h))
+        print size_w, size_h
+        arg = 'width'
+        if size_w < size_h:
+            # adjust the longer one between width end height
+            arg = 'height'
+        opt_imgs = re.sub(ur'\[.*?\]', ur'[%s=%s\\textwidth]' %
+                          (arg, img_width), opt_imgs)
+
+    else:
+        opt_imgs = []
+        opt_text = re.sub(img_inline_pattern, lambda x: x.group(1), opt)
+
+        opt_imgs.extend(re.findall(img_display_pattern, opt))
+        opt_imgs.extend(re.findall(img_inpar_pattern, opt))
+        opt_imgs = u''.join(opt_imgs)
+        # print opt_imgs
+    print [opt_text, opt_imgs]
+    return [opt_text, opt_imgs]
 
 
 def deal_with_qs(qs, item_type):
@@ -361,9 +399,10 @@ def item_latex_render(item_id):
         qs = item['data']['qs'][0]
         desc = deal_desc_img(qs['desc'])
         opts = qs['opts']
-        opt_tex = get_opts_head(opts)
+        opts_head = get_opts_head(opts)
+        opt_tex = opts_head
         for opt in opts:
-            opt = get_opt_img(opt, 0.222)
+            opt = deal_with_opt(opt, 0.222, opts_head)
             opt_tex += '{%s}{%s}' % (opt[0], opt[1])
         opt_tex = str2latex(opt_tex)
         tex += u'\\klxitem{%s}{%s}{%s}{%s}' % (
@@ -501,19 +540,19 @@ width_map = {
 pdf_width = u'125.46652mm'
 img_url = 'http://www.kuailexue.com/data/img/'
 
-itmtyp_2_name = {1001: '选择题',
-                 1002: '填空题',
-                 1003: '解答题',
-                 2001: '选择题',
-                 2002: '填空题',
-                 2003: '解答题',
-                 2004: '实验题',
-                 2005: '模块选做题',
-                 2006: '作图题',
-                 2007: '科普阅读题',
-                 2008: '简答题',
-                 2009: '计算题',
-                 2010: '综合应用题',
+itmtyp_2_name = {1001: u'选择题',
+                 1002: u'填空题',
+                 1003: u'解答题',
+                 2001: u'选择题',
+                 2002: u'填空题',
+                 2003: u'解答题',
+                 2004: u'实验题',
+                 2005: u'模块选做题',
+                 2006: u'作图题',
+                 2007: u'科普阅读题',
+                 2008: u'简答题',
+                 2009: u'计算题',
+                 2010: u'综合应用题',
                  }
 
 client = MongoClient('10.0.0.100', 27017)
@@ -529,42 +568,20 @@ img_path = '/Users/zhangyingjie/var/data/img'
 # img_re2 = re.compile(ur'\n\[\[img\]\].*?\[\[/img\]\]')
 img_re2 = re.compile(ur'\[\[img\]\].*?\[\[/img\]\]')  # used for desc imgs
 # used for delete imgs urls
-img_re3 = re.compile(ur'\n?\s?\u200b?\[\[img\]\].*?\[\[/img\]\]')
+img_re3 = re.compile(ur'\n?\s?\u200b?(\[\[img\]\].*?\[\[/img\]\])')
 img_file_re = re.compile(ur'\w+\.(?:png|jpg|gif|bmp|jpeg)')
+img_display_pattern = re.compile(ur'\[\[display\]\](.*?)\[\[/display\]\]')
+img_inpar_pattern = re.compile(ur'\[\[inpar\]\](.*?)\[\[/inpar\]\]')
+img_inline_pattern = re.compile(ur'\[\[inline\]\](.*?)\[\[/inline\]\]')
+
+
 for path in [paper_path, item_path, img_path]:
     if os.path.exists(path):
         pass
     else:
         os.makedirs(path)
 
-# paper_id = ObjectId('572abb4bbbddbd4d2dbd89dc')
-# paper = db.papers.find_one({'_id': paper_id})
-# f = open('{path}{name}.tex'.format(path=paper_path, name='11'), 'w')
-# f.write(klx_paper_render(paper))
-# f.close()
-item_ids = [
-    ObjectId("55dc2c0e5417d1698e554c3f"),
-    ObjectId("55dc2c575417d1698e554c43"),
-    ObjectId("55dfceca5417d14d2d0866ff"),
-    ObjectId("55dfd3315417d14e27e0f691"),
-    ObjectId("55dc2c0e5417d1698e554c3f"),
-    ObjectId("55dc2c575417d1698e554c43"),
-    ObjectId("55dfceca5417d14d2d0866ff"),
-    ObjectId("55dfd3315417d14e27e0f691"),
-    '55f69bf35417d174cc827da4',
-    ObjectId("55dc2c0e5417d1698e554c3f"),
-    ObjectId("55dc2c575417d1698e554c43"),
-    ObjectId("55dfceca5417d14d2d0866ff"),
-    ObjectId("55dfd3315417d14e27e0f691")
-]
-item_ids = [  # physics
-    '55ebde4d5417d17be13a4c06',
-    '55ebde4d5417d17be13a4c08',
-    '55ee4f735417d17be0d12783',
-    '55eea5445417d17be13a4ced',
-    '55ebde235417d17be0d126f7',
-    '55ebde915417d17be13a4c14',
-]
+
 item_ids = [  # math
     # '54d3175c0045fe3e0e531c94',
     # # '54f16a9a0045fe3e0e532405',
@@ -573,8 +590,23 @@ item_ids = [  # math
     '5368a442e13823417ff9bc67',
     '54364cb30045fe48f83730ee',
     '56d9474b5417d15b1626fe2e',
-    '56de8abd5417d15e130f8bbf'
+    '56de8abd5417d15e130f8bbf',
+    '537dcc42e138230941ea408c',
+    '537dcc42e138230941ea40a0',
 
 ]
-# do_multi_items_test(54687, 500)
-do_certain_items(item_ids, subject)
+item_ids = ['537dcc42e138230941ea408c',
+            '56d8f8db5417d15b3ead65dd',
+            '56d9434b5417d15b3ead6639',
+            '56d9474b5417d15b1626fe2e',
+            '56e91a9f5417d15b16270324',
+            '5368a442e13823417ff9bc67'
+            ]
+item_ids = [
+    # '56d9474b5417d15b1626fe2e',
+    '56f2160f5417d1131ec914da',
+    '56f3d1415417d140a2802cbd',
+]
+
+do_multi_items_test(56465, 500)
+# do_certain_items(item_ids, subject)
