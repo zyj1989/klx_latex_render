@@ -494,36 +494,3 @@ for path in [paper_path, item_path, img_path]:
         pass
     else:
         os.makedirs(path)
-
-# paper_id = ObjectId('572abb4bbbddbd4d2dbd89dc')
-# paper = db.papers.find_one({'_id': paper_id})
-# f = open('{path}{name}.tex'.format(path=paper_path, name='11'), 'w')
-# f.write(klx_paper_render(paper))
-# f.close()
-item_ids = [
-    ObjectId("55dc2c0e5417d1698e554c3f"),
-    ObjectId("55dc2c575417d1698e554c43"),
-    ObjectId("55dfceca5417d14d2d0866ff"),
-    ObjectId("55dfd3315417d14e27e0f691"),
-    ObjectId("55dc2c0e5417d1698e554c3f"),
-    ObjectId("55dc2c575417d1698e554c43"),
-    ObjectId("55dfceca5417d14d2d0866ff"),
-    ObjectId("55dfd3315417d14e27e0f691"),
-    '55f69bf35417d174cc827da4',
-    ObjectId("55dc2c0e5417d1698e554c3f"),
-    ObjectId("55dc2c575417d1698e554c43"),
-    ObjectId("55dfceca5417d14d2d0866ff"),
-    ObjectId("55dfd3315417d14e27e0f691")
-]
-item_ids = [  # physics
-    '55eb90085417d17be13a4b6a',
-    '55eb90085417d17be13a4b6e',
-    '55e6b1c85417d17be13a4b47',
-]
-item_ids = [  # math
-    '5361f916e1382357d4b0e6d8',
-    '5361f916e1382357d4b0e6d7',
-    '535e6ac6e1382357d4b0d4f0',
-]
-do_multi_items_test(10000, 10000)
-# do_certain_items(item_ids, subject)

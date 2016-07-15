@@ -1,7 +1,7 @@
 ﻿#!/usr/bin/env python
 # encoding:utf-8
 '''
-item render with minipage
+item render with minipage 
 '''
 import re
 import time
@@ -76,15 +76,9 @@ def str2latex(ori):
             return s
 
         def _deal_textmode(s):
-            latex_remaining_char = ['$', '%', '&', '#', '^', '_', ]
-            s = s.replace(u'\n', u'\\\\{}\n')
-            # for k in latex_remaining_char:
-            s = re.sub(ur'(?<!\\)\$', u'\\$', s)
-            s = re.sub(ur'(?<!\\)%', u'\\%', s)
+
+            s = s.replace(u'\n', u'\\\\\n')
             s = re.sub(ur'(?<!\\)&', u'\\&', s)
-            s = re.sub(ur'(?<!\\)#', u'\\#', s)
-            s = re.sub(ur'(?<!\\)\^', u'\\^', s)
-            s = re.sub(ur'(?<!\\)_', u'\\_', s)
             return s
 
         def _dealdisplay(s):
@@ -154,16 +148,16 @@ def str2latex(ori):
             (ur'\u2467', ur'{\text{\ding{179}}}'),
             (ur'\u2468', ur'{\text{\ding{180}}}'),
             (ur'\u2469', ur'{\text{\ding{181}}}'),
-            (ur'\u2160', ur'{\text{\(\mathrm{I}\)}}'),
-            (ur'\u2161', ur'{\text{\(\mathrm{II}\)}}'),
-            (ur'\u2162', ur'{\text{\(\mathrm{III}\)}}'),
-            (ur'\u2163', ur'{\text{\(\mathrm{IV}\)}}'),
-            (ur'\u2164', ur'{\text{\(\mathrm{V}\)}}'),
-            (ur'\u2165', ur'{\text{\(\mathrm{VI}\)}}'),
-            (ur'\u2166', ur'{\text{\(\mathrm{VII}\)}}'),
-            (ur'\u2167', ur'{\text{\(\mathrm{VIII}\)}}'),
-            (ur'\u2168', ur'{\text{\(\mathrm{IX}\)}}'),
-            (ur'\u2169', ur'{\text{\(\mathrm{X}\)}}'),
+            (ur'\u2160', ur'{\text{$\mathrm{I}$}}'),
+            (ur'\u2161', ur'{\text{$\mathrm{II}$}}'),
+            (ur'\u2162', ur'{\text{$\mathrm{III}$}}'),
+            (ur'\u2163', ur'{\text{$\mathrm{IV}$}}'),
+            (ur'\u2164', ur'{\text{$\mathrm{V}$}}'),
+            (ur'\u2165', ur'{\text{$\mathrm{VI}$}}'),
+            (ur'\u2166', ur'{\text{$\mathrm{VII}$}}'),
+            (ur'\u2167', ur'{\text{$\mathrm{VIII}$}}'),
+            (ur'\u2168', ur'{\text{$\mathrm{IX}$}}'),
+            (ur'\u2169', ur'{\text{$\mathrm{X}$}}'),
             (ur'\u00a0', ur' '),
             (ur'\overparen', ur'\wideparen'),
             (ur'\lt', ur'<'),
@@ -182,22 +176,14 @@ def str2latex(ori):
         for uni, latex in unicode2latex:
             s = s.replace(uni, latex)
         return s
-
     ori = unicode_2_latex(ori)
-
-    ori = re.sub(img_re4, ur'', ori)
-    print ori
     ori = re.sub(img_re3, ur'', ori)
-    print ori
     ori = re.sub(ur'(?<!(?:\\|%))%', ur'\%', ori)
     ori = cn_in_mathmode(ori)
     ori = re.sub(
         ur'\\begin\s?{array}[\s\S]*?\\end\s?{array}', array_col_correction, ori)
-    ori = re.sub(ur'\[\[un\]\]([\s\S]*?)\[\[/un\]\]',
-                 lambda x: u'\\uline{%s}' % x.group(1), ori)
     ori = re.sub(ur'\u005f\u005f+', ur'\\dd ', ori)
     ori = ori.replace(u'\n\n', '\n')
-    print ori
     return ori
 
 
@@ -222,7 +208,6 @@ def punc_in_img(s):  # by ningshuo
 
 def deal_with_img(s):
     img = s.group(1)
-    print img
     img = punc_in_img(img)
     scale = 0.7
     scale = 0.6
@@ -337,7 +322,7 @@ def deal_desc_img(desc):
     desc_text = re.sub(
         ur'\[\[inline\]\](.*?)\[\[/inline\]\]', lambda x: x.group(1), desc_text)
     desc_text = re.sub(
-        ur'\[\[display\]\](.*?)\[\[/display\]\]', lambda x: u'\\newline %s' % x.group(1), desc_text)
+        ur'\[\[display\]\](.*?)\[\[/display\]\]', lambda x: x.group(1), desc_text)
     img_inpar = u''.join(img_inpar)
 
     result['imgs'] = img_inpar
@@ -363,7 +348,7 @@ def deal_with_opt(opt, img_width, opts_head):
         if size_w < size_h:
             # adjust the longer one between width end height
             arg = 'height'
-        opt_imgs = re.sub(ur'\[.*?\]', ur'[%s=%s\\optwidth]' %
+        opt_imgs = re.sub(ur'\[.*?\]', ur'[%s=%s\\textwidth]' %
                           (arg, img_width), opt_imgs)
 
     else:
@@ -412,11 +397,7 @@ def item_latex_render(item_id):
         tex += '\\begin{questions}'
         varwidth = width_map[item['data']['type']]
         qs = item['data']['qs'][0]
-        if qs['desc'] == '' and item['data']['stem'] != '':
-            desc = item['data']['stem']
-        else:
-            desc = qs['desc']
-        desc = deal_desc_img(desc)
+        desc = deal_desc_img(qs['desc'])
         opts = qs['opts']
         opts_head = get_opts_head(opts)
         opt_tex = opts_head
@@ -428,7 +409,7 @@ def item_latex_render(item_id):
             desc['text'], opt_tex, desc['imgs'], varwidth)
 
     elif item['data']['type'] in [1003, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 4003, 4004, 3003, 3004]:
-        tex += '\\begin{questions}\n\\begin{varwidth}'
+        tex += '\\begin{{questions}}\n\\begin{{varwidth}}'
         tex += '{{{}}}'.format(width_map[1003])
         if len(item['data']['stem']) == 0:
             if len(item['data']['qs']) == 1:
@@ -452,9 +433,7 @@ def item_latex_render(item_id):
                 tex += qs_tex
                 tex += u'\\end{subquestions}\n'
         else:
-            print 'yes'
             tex += str2latex(item['data']['stem'])
-            print tex
             if len(item['data']['qs'][0]['desc']) != 0:
                 tex += u'\\vspace{-1em}\\begin{subquestions}\n'
                 for qs in item['data']['qs']:
@@ -472,7 +451,6 @@ def item_latex_render(item_id):
                 tex += qs_tex
                 tex += u'\\end{subquestions}\n'
         tex += u'\\end{varwidth}\n'
-        tex = re.sub(img_re3, u'', tex)
     tex += u'\\end{questions}'
     if item['data']['type'] in [1001, 2001, 3001, 4001]:
         tex = tex.replace(ur'\dd ', ur'\dq ')
@@ -523,7 +501,7 @@ def get_items(item_ids, subject):
 
 def do_multi_items_test(skip, limit):
     item_ids_cursor = db.items.find({'deleted': False,
-                                     # 'data.type': 1001
+                                     'data.type': 1001
                                      }, {
         '_id': 1}).skip(skip).limit(limit)
     item_ids = []
@@ -538,7 +516,7 @@ def do_multi_items_test(skip, limit):
 
 def do_certain_items(item_ids, subject):
     tex = get_items(item_ids, subject)
-    f = open(os.path.join(paper_path, '1test.tex'), 'w')
+    f = open(os.path.join(paper_path, 'test.tex'), 'w')
     f.write(tex)
 
 """
@@ -590,10 +568,8 @@ img_path = '/Users/zhangyingjie/var/data/img'
 # img_re2 = re.compile(ur'\n\[\[img\]\].*?\[\[/img\]\]')
 img_re2 = re.compile(ur'\[\[img\]\].*?\[\[/img\]\]')  # used for desc imgs
 # used for delete imgs urls
-img_re3 = re.compile(
-    ur'\n?\s?\u200b?(\[\[img\]\].*?\[\[/img\]\])\u200b?\s?\n?')
-img_re4 = re.compile(ur'\[\[img\]\].*?\[\[/img\]\]\u200b?\s?\n')
-img_file_re = re.compile(ur'\w+\.(?:png|jpg|gif|bmp|jpeg|tif)')
+img_re3 = re.compile(ur'\n?\s?\u200b?(\[\[img\]\].*?\[\[/img\]\])')
+img_file_re = re.compile(ur'\w+\.(?:png|jpg|gif|bmp|jpeg)')
 img_display_pattern = re.compile(ur'\[\[display\]\](.*?)\[\[/display\]\]')
 img_inpar_pattern = re.compile(ur'\[\[inpar\]\](.*?)\[\[/inpar\]\]')
 img_inline_pattern = re.compile(ur'\[\[inline\]\](.*?)\[\[/inline\]\]')
@@ -604,25 +580,3 @@ for path in [paper_path, item_path, img_path]:
         pass
     else:
         os.makedirs(path)
-
-
-item_ids = [  # math
-    # '54d3175c0045fe3e0e531c94',
-    # # '54f16a9a0045fe3e0e532405',
-    # # '54f52f640045fe3e0e5324f5',
-    # '56e91a9f5417d15b16270324',
-    '5368a442e13823417ff9bc67',
-    '54364cb30045fe48f83730ee',
-    '56d9474b5417d15b1626fe2e',
-    '56de8abd5417d15e130f8bbf',
-    '537dcc42e138230941ea408c',
-    '537dcc42e138230941ea40a0',
-
-]
-
-item_ids = [
-    '543cc9810045fe48f83732d3',
-]
-
-# do_multi_items_test(56465, 500)
-do_certain_items(item_ids, subject)
