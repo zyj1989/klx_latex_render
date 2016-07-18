@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
 # encoding:utf-8
 '''
-试卷渲染
+item render with minipage
 '''
 import re
 import time
@@ -22,7 +22,7 @@ from pymongo import MongoClient
 
 template = ur'''% !TEX encoding=utf8
 % !TEX program=xelatex
-\documentclass{klx}
+\documentclass{klxp}
 \begin{document}
 '''
 
@@ -76,9 +76,15 @@ def str2latex(ori):
             return s
 
         def _deal_textmode(s):
-
-            s = s.replace(u'\n', u'\\\\\n')
-
+            latex_remaining_char = ['$', '%', '&', '#', '^', '_', ]
+            s = s.replace(u'\n', u'\\\\{}\n')
+            # for k in latex_remaining_char:
+            s = re.sub(ur'(?<!\\)\$', u'\\$', s)
+            s = re.sub(ur'(?<!\\)%', u'\\%', s)
+            s = re.sub(ur'(?<!\\)&', u'\\&', s)
+            s = re.sub(ur'(?<!\\)#', u'\\#', s)
+            s = re.sub(ur'(?<!\\)\^', u'\\^', s)
+            s = re.sub(ur'(?<!\\)_', u'\\_', s)
             return s
 
         def _dealdisplay(s):
@@ -148,16 +154,16 @@ def str2latex(ori):
             (ur'\u2467', ur'{\text{\ding{179}}}'),
             (ur'\u2468', ur'{\text{\ding{180}}}'),
             (ur'\u2469', ur'{\text{\ding{181}}}'),
-            (ur'\u2160', ur'\text{$\mathrm{I}$}'),
-            (ur'\u2161', ur'\text{$\mathrm{II}$}'),
-            (ur'\u2162', ur'\text{$\mathrm{III}$}'),
-            (ur'\u2163', ur'\text{$\mathrm{IV}$}'),
-            (ur'\u2164', ur'\text{$\mathrm{V}$}'),
-            (ur'\u2165', ur'\text{$\mathrm{VI}$}'),
-            (ur'\u2166', ur'\text{$\mathrm{VII}$}'),
-            (ur'\u2167', ur'\text{$\mathrm{VIII}$}'),
-            (ur'\u2168', ur'\text{$\mathrm{IX}$}'),
-            (ur'\u2169', ur'\text{$\mathrm{X}$}'),
+            (ur'\u2160', ur'{\text{\(\mathrm{I}\)}}'),
+            (ur'\u2161', ur'{\text{\(\mathrm{II}\)}}'),
+            (ur'\u2162', ur'{\text{\(\mathrm{III}\)}}'),
+            (ur'\u2163', ur'{\text{\(\mathrm{IV}\)}}'),
+            (ur'\u2164', ur'{\text{\(\mathrm{V}\)}}'),
+            (ur'\u2165', ur'{\text{\(\mathrm{VI}\)}}'),
+            (ur'\u2166', ur'{\text{\(\mathrm{VII}\)}}'),
+            (ur'\u2167', ur'{\text{\(\mathrm{VIII}\)}}'),
+            (ur'\u2168', ur'{\text{\(\mathrm{IX}\)}}'),
+            (ur'\u2169', ur'{\text{\(\mathrm{X}\)}}'),
             (ur'\u00a0', ur' '),
             (ur'\overparen', ur'\wideparen'),
             (ur'\lt', ur'<'),
@@ -176,14 +182,22 @@ def str2latex(ori):
         for uni, latex in unicode2latex:
             s = s.replace(uni, latex)
         return s
+
     ori = unicode_2_latex(ori)
+
+    ori = re.sub(img_re4, ur'', ori)
+    print ori
     ori = re.sub(img_re3, ur'', ori)
-    ori = re.sub(ur'(?<!(?=\\|%))%', '\%', ori)
+    print ori
+    ori = re.sub(ur'(?<!(?:\\|%))%', ur'\%', ori)
     ori = cn_in_mathmode(ori)
     ori = re.sub(
         ur'\\begin\s?{array}[\s\S]*?\\end\s?{array}', array_col_correction, ori)
+    ori = re.sub(ur'\[\[un\]\]([\s\S]*?)\[\[/un\]\]',
+                 lambda x: u'\\uline{%s}' % x.group(1), ori)
     ori = re.sub(ur'\u005f\u005f+', ur'\\dd ', ori)
     ori = ori.replace(u'\n\n', '\n')
+    print ori
     return ori
 
 
@@ -206,8 +220,65 @@ def punc_in_img(s):  # by ningshuo
     return s
 
 
+def deal_with_img(s):
+    img = s.group(1)
+    print img
+    img = punc_in_img(img)
+    scale = 0.7
+    scale = 0.6
+    img_file = re.findall(img_file_re, img)[0]
+    file_path_name = os.path.join(img_path, img_file)
+    if not os.path.isfile(file_path_name):
+        urllib.urlretrieve('{}{}'.format(
+            img_url, img_file), file_path_name)
+        print img_file
+    if 'src' in img:  # ¿ÉÄÜ²»ÑÏ½÷£¬×ÉÑ¯¹ýÏàÐÅ
+        img_json = json.loads(img[7:-8])
+    else:
+        img_json = ''
+    im = Image.open(file_path_name)
+    size = []
+
+    if 'height' not in img_json:
+        if 'width' not in img_json:
+            size_w = im.size[0] * scale
+            size_h = im.size[1] * scale
+        else:
+            size_w = int(img_json['width']) * scale
+            mag = size_w / im.size[0]
+            size_h = im.size[1] * mag
+    else:
+        if 'width' not in img_json:
+            size_h = int(img_json['height']) * scale
+            mag = size_h / im.size[1]
+            size_w = im.size[0] * mag
+        else:
+            size_w = int(img_json['width']) * scale
+            size_h = int(img_json['height']) * scale
+    size.append('width=%spt' % size_w)
+    size.append('height=%spt' % size_h)
+    size_tex = ','.join(size)
+    raise_height = 0.5 * size_h - 1.6  #
+    print size_w, size_h
+    # print size_tex
+    if size_w > 365:  # img display zoom
+        img_tex = u'[[display]]\\includegraphics[width=\\optwidth]{{{}}}[[/display]]'.format(
+            file_path_name)
+    elif size_h < 25:  # img inline
+        img_tex = u'[[inline]]\ \\raisebox{{-{}pt}}{{\\includegraphics[{}]{{{}}}}}\ [[/inline]]'.format(
+            raise_height, size_tex, file_path_name)
+    elif size_w > 200:  # img display real
+        img_tex = u'[[display]]\\includegraphics[{}]{{{}}}[[/display]]'.format(
+            size_tex, file_path_name)
+    else:  # img inpar
+        img_tex = u'[[inpar]]\\includegraphics[{}]{{{}}}[[/inpar]]'.format(
+            size_tex, file_path_name)
+    return img_tex
+
+
 def get_opts_head(opts):
     opt_imgs_cnt = 0
+    opt_imgs_inline_cnt = 0
     if len(opts) == 3:
         result = '\\trech'
     elif len(opts) == 5:
@@ -215,11 +286,16 @@ def get_opts_head(opts):
     elif len(opts) == 4:
         for opt in opts:
             opt = punc_in_img(opt)
+            opt = re.sub(img_re3, deal_with_img, opt)
             opt_imgs = re.findall(img_file_re, opt)
+            opt_imgs_inline = re.findall(
+                ur'\[\[inline\]\].*?\[\[/inline\]\]', opt)
             if opt_imgs:
                 opt_imgs_cnt += 1
-            opt = re.sub(img_re3, '', opt)
-        if opt_imgs_cnt == 4:
+            if opt_imgs_inline:
+                opt_imgs_inline_cnt += 1
+
+        if opt_imgs_cnt == 4 and opt_imgs_inline_cnt != 4:
             result = '\\imgch'
         else:
             result = '\\ch'
@@ -238,79 +314,89 @@ def get_opt_img(opt, img_width):
             if not os.path.isfile(file_path_name):
                 urllib.urlretrieve('{}{}'.format(
                     img_url, img_file), file_path_name)
-                print file_path_name
             im = Image.open(file_path_name)
             arg = 'width'
             if im.size[0] < im.size[1]:
                 # adjust the longer one between width end height
                 arg = 'height'
-            opt_img = '\\includegraphics[{}={}\\textwidth]{{{}}}'.format(
+            opt_img = '\\includegraphics[{}={}\\optwidth]{{{}}}'.format(
                 arg, img_width, os.path.join(img_path, img_file))
     opt = re.sub(img_re3, '', opt)
-    opt = re.sub(ur'\n', '', opt)
     return [opt, opt_img]
 
 
-def get_desc_img(desc):
+def deal_desc_img(desc):
+    result = {
+        'text': '',
+        'imgs': '',
+    }
     desc = punc_in_img(desc)
-    desc_imgs = re.findall(img_re2, desc)
-    scale = 0.7
-    scale = 0.5
-    img_inpar_tex = ''
-    img_display_tex = ''
-    for desc_img in desc_imgs:
-        img_file = re.findall(img_file_re, desc_img)[0]
-        file_path_name = os.path.join(img_path, img_file)
-        if not os.path.isfile(file_path_name):
-            urllib.urlretrieve('{}{}'.format(
-                img_url, img_file), file_path_name)
-            print img_file
-        img_json = json.loads(desc_img[7:-8])
-        im = Image.open(file_path_name)
-        size = []
-        print img_json
-        if 'width' in img_json:
-            size_w = int(img_json['width']) * scale
-            size.append('width={}pt'.format(str(size_w)))
-        else:
-            size_w = im.size[0]
+    s = re.sub(img_re3, deal_with_img, desc)
+    img_inpar = re.findall(ur'\[\[inpar\]\](.*?)\[\[/inpar\]\]', s)
+    desc_text = re.sub(ur'\[\[inpar\]\](.*?)\[\[/inpar\]\]', u'', s)
+    desc_text = re.sub(
+        ur'\[\[inline\]\](.*?)\[\[/inline\]\]', lambda x: x.group(1), desc_text)
+    desc_text = re.sub(
+        ur'\[\[display\]\](.*?)\[\[/display\]\]', lambda x: u'\\newline %s' % x.group(1), desc_text)
+    img_inpar = u''.join(img_inpar)
 
-        if 'height' in img_json:
-            size_h = int(img_json['height']) * scale
-            size.append('height={}pt'.format(str(size_h)))
-        else:
-            size_h = im.size[1]
+    result['imgs'] = img_inpar
+    result['text'] = str2latex(desc_text)
+    return result
 
-        size = ','.join(size)
-        print size
-        if size_w > 180:
-            img_display_tex += u'\\includegraphics[{}]{{{}}}'.format(
-                size, file_path_name)
-        else:
-            img_inpar_tex += u'\\includegraphics[{}]{{{}}}'.format(
-                size, file_path_name)
-    desc = re.sub(img_re3, ur'', desc)
-    if img_display_tex != '':
-        desc += u'\\newline %s' % img_display_tex
-    desc_tex = u'\\settowidth{{\imglength}}{{{img}}}\\addtolength{{\optlength}}{{-1\\imglength}}\\begin{{window}}[0,r,{{{img}}},{{}}]\r{desc}\\end{{window}}'.format(
-        img=img_inpar_tex, desc=desc)
-    return desc_tex
+
+def deal_with_opt(opt, img_width, opts_head):
+    opt = punc_in_img(opt)
+    opt = re.sub(img_re3, deal_with_img, opt)
+    if opts_head == '\\imgch':
+        opt_text = re.sub(img_display_pattern, '', opt)
+        opt_text = re.sub(img_inpar_pattern, '', opt_text)
+        opt_text = re.sub(img_inline_pattern, '', opt_text)
+        opt_imgs = re.findall(ur'\]\](.*?)\[\[/', opt)
+        opt_imgs = u''.join(opt_imgs)
+        size_w = re.findall(ur'\[width=(.*?)pt', opt_imgs)
+        size_h = re.findall(ur',height=(.*?)pt\]', opt_imgs)
+        size_w = float(u''.join(size_w))
+        size_h = float(u''.join(size_h))
+        print size_w, size_h
+        arg = 'width'
+        if size_w < size_h:
+            # adjust the longer one between width end height
+            arg = 'height'
+        opt_imgs = re.sub(ur'\[.*?\]', ur'[%s=%s\\optwidth]' %
+                          (arg, img_width), opt_imgs)
+
+    else:
+        opt_imgs = []
+        opt_text = re.sub(img_inline_pattern, lambda x: x.group(1), opt)
+
+        opt_imgs.extend(re.findall(img_display_pattern, opt))
+        opt_imgs.extend(re.findall(img_inpar_pattern, opt))
+        opt_imgs = u''.join(opt_imgs)
+        # print opt_imgs
+    print [opt_text, opt_imgs]
+    return [opt_text, opt_imgs]
 
 
 def deal_with_qs(qs, item_type):
-    if item_type in [1001, 1002, 2001, 2002]:
-        desc_tex = get_desc_img(qs['desc'])
-        print 1
-    else:
+    if item_type not in [1001, 1002, 2001, 2002]:
+        #     desc_tex = deal_desc_img(qs['desc'])
+        #     opts = qs['opts']
+        #     opt_tex = get_opts_head(opts)
+        #     for opt in opts:
+        #         opt = get_opt_img(opt, 0.222)
+        #         opt_tex += '{%s}{%s}' % (opt[0], opt[1])
+        #     qs_tex += str2latex(opt_tex)
+        # else:
         desc_tex = qs['desc']
-    qs_tex = str2latex(desc_tex)
-    qs_tex += u'\n'
-    opts = qs['opts']
-    opt_tex = get_opts_head(opts)
-    for opt in opts:
-        opt = get_opt_img(opt, 0.222)
-        opt_tex += '{%s}{%s}' % (opt[0], opt[1])
-    qs_tex += str2latex(opt_tex)
+        qs_tex = str2latex(desc_tex)
+        qs_tex += u'\n'
+        opts = qs['opts']
+        opt_tex = get_opts_head(opts)
+        for opt in opts:
+            opt = get_opt_img(opt, 0.222)
+            opt_tex += '{%s}{%s}' % (opt[0], opt[1])
+        qs_tex += str2latex(opt_tex)
     return qs_tex
 
 
@@ -320,21 +406,33 @@ def item_latex_render(item_id):
     if not item:
         print item_id
         return '%%%%%%%%%%%%%%%%'
-    tex = '\n%% {} {}\n\\begin{{questions}}\n\\begin{{varwidth}}'.format(
+    tex = '\r%% {} {}\r'.format(
         item_id, item['data']['type'])
-    if item['data']['type'] in [1001, 2001]:
-        tex += '{{{}}}'.format(width_map[1001])
+    if item['data']['type'] in [1001, 2001, 1002, 2002]:
+        tex += '\\begin{questions}'
+        varwidth = width_map[item['data']['type']]
         qs = item['data']['qs'][0]
-        tex += deal_with_qs(qs, item['data']['type'])
-    elif item['data']['type'] in [1002, 2002]:
-        tex += '{{{}}}'.format(width_map[1002])
-        qs = item['data']['qs'][0]
-        tex += deal_with_qs(qs, item['data']['type'])
+        if qs['desc'] == '' and item['data']['stem'] != '':
+            desc = item['data']['stem']
+        else:
+            desc = qs['desc']
+        desc = deal_desc_img(desc)
+        opts = qs['opts']
+        opts_head = get_opts_head(opts)
+        opt_tex = opts_head
+        for opt in opts:
+            opt = deal_with_opt(opt, 0.222, opts_head)
+            opt_tex += '{%s}{%s}' % (opt[0], opt[1])
+        opt_tex = str2latex(opt_tex)
+        tex += u'\\klxitem{%s}{%s}{%s}{%s}' % (
+            desc['text'], opt_tex, desc['imgs'], varwidth)
 
-    elif item['data']['type'] in [1003, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010]:
+    elif item['data']['type'] in [1003, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 4003, 4004, 3003, 3004]:
+        tex += '\\begin{questions}\n\\begin{varwidth}'
         tex += '{{{}}}'.format(width_map[1003])
         if len(item['data']['stem']) == 0:
             if len(item['data']['qs']) == 1:
+                print item['_id']
                 qs = item['data']['qs']
                 tex += deal_with_qs(qs, item['data']['type'])
             else:
@@ -354,7 +452,9 @@ def item_latex_render(item_id):
                 tex += qs_tex
                 tex += u'\\end{subquestions}\n'
         else:
+            print 'yes'
             tex += str2latex(item['data']['stem'])
+            print tex
             if len(item['data']['qs'][0]['desc']) != 0:
                 tex += u'\\vspace{-1em}\\begin{subquestions}\n'
                 for qs in item['data']['qs']:
@@ -371,8 +471,9 @@ def item_latex_render(item_id):
                     qs_tex += qss_tex
                 tex += qs_tex
                 tex += u'\\end{subquestions}\n'
-
-    tex += u'\\end{varwidth}\n\\end{questions}'
+        tex += u'\\end{varwidth}\n'
+        tex = re.sub(img_re3, u'', tex)
+    tex += u'\\end{questions}'
     if item['data']['type'] in [1001, 2001, 3001, 4001]:
         tex = tex.replace(ur'\dd ', ur'\dq ')
         # tex = re.sub(ur'\\begin{question}\s?\\\\', ur'\\begin{question}', tex)
@@ -396,7 +497,7 @@ def klx_paper_render(paper):
 
     def _deal_part_head(part):
         item_type = itmtyp_2_name[part[0]['type']]
-        return u'\\wns {} \\\\*\n'.format(item_type)
+        return u'\\wns {} \\\\* \n'.format(item_type)
 
     result_tex = template
     result_tex += _deal_paper_head(paper)
@@ -422,7 +523,7 @@ def get_items(item_ids, subject):
 
 def do_multi_items_test(skip, limit):
     item_ids_cursor = db.items.find({'deleted': False,
-                                     'data.type': 2001
+                                     # 'data.type': 1001
                                      }, {
         '_id': 1}).skip(skip).limit(limit)
     item_ids = []
@@ -437,42 +538,61 @@ def do_multi_items_test(skip, limit):
 
 def do_certain_items(item_ids, subject):
     tex = get_items(item_ids, subject)
-    f = open(os.path.join(paper_path, 'test.tex'), 'w')
+    f = open(os.path.join(paper_path, '1test.tex'), 'w')
     f.write(tex)
+    f.close()
+
+
+def do_paper_test(paper_id, subject):
+    paper = db.papers.find_one({'_id': ObjectId(paper_id)})
+    print type(paper)
+    tex = klx_paper_render(paper)
+    f = open(os.path.join(paper_path, '{}.tex'.format(paper_id)), 'w')
+    f.write(tex)
+    f.close
 
 """
 === Setting =============================================================
 """
 width_map = {
-    1001: '125.46652mm',
-    1002: '100.894444444mm',
-    1003: '161.928mm',
+    1001: '175mm',
+    1002: '175mm',
+    1003: '175mm',
+    2001: '175mm',
+    2002: '175mm',
+    2003: '175mm',
+    2004: '175mm',
+    2005: '175mm',
+    2006: '175mm',
+    2007: '175mm',
+    2008: '175mm',
+    2009: '175mm',
 }
 
 pdf_width = u'125.46652mm'
 img_url = 'http://www.kuailexue.com/data/img/'
 
-itmtyp_2_name = {1001: '选择题',
-                 1002: '填空题',
-                 1003: '解答题',
-                 2001: '选择题',
-                 2002: '填空题',
-                 2003: '解答题',
-                 2004: '实验题',
-                 2005: '模块选做题',
-                 2006: '作图题',
-                 2007: '科普阅读题',
-                 2008: '简答题',
-                 2009: '计算题',
-                 2010: '综合应用题',
+itmtyp_2_name = {1001: u'选择题',
+                 1002: u'填空题',
+                 1003: u'解答题',
+                 2001: u'选择题',
+                 2002: u'填空题',
+                 2003: u'解答题',
+                 2004: u'实验题',
+                 2005: u'模块选做题',
+                 2006: u'作图题',
+                 2007: u'科普阅读题',
+                 2008: u'简答题',
+                 2009: u'计算题',
+                 2010: u'综合应用题',
                  }
 
 client = MongoClient('10.0.0.100', 27017)
-dbname = 'klx_ph'
+dbname = 'klx_math'
 db = client[dbname]
 
 
-subject = 'klx_ph'
+subject = 'klx_math'
 paper_path = '../papers'
 item_path = '../items'
 # img_path = '../imgs/'
@@ -480,37 +600,36 @@ img_path = '/Users/zhangyingjie/var/data/img'
 # img_re2 = re.compile(ur'\n\[\[img\]\].*?\[\[/img\]\]')
 img_re2 = re.compile(ur'\[\[img\]\].*?\[\[/img\]\]')  # used for desc imgs
 # used for delete imgs urls
-img_re3 = re.compile(ur'\n?\s?\u200b?\[\[img\]\].*?\[\[/img\]\]')
-img_file_re = re.compile(ur'\w+\.(?:png|jpg|gif|bmp|jpeg)')
+img_re3 = re.compile(
+    ur'\n?\s?\u200b?(\[\[img\]\].*?\[\[/img\]\])\u200b?\s?\n?')
+img_re4 = re.compile(ur'\[\[img\]\].*?\[\[/img\]\]\u200b?\s?\n')
+img_file_re = re.compile(ur'\w+\.(?:png|jpg|gif|bmp|jpeg|tif)')
+img_display_pattern = re.compile(ur'\[\[display\]\](.*?)\[\[/display\]\]')
+img_inpar_pattern = re.compile(ur'\[\[inpar\]\](.*?)\[\[/inpar\]\]')
+img_inline_pattern = re.compile(ur'\[\[inline\]\](.*?)\[\[/inline\]\]')
+
+
 for path in [paper_path, item_path, img_path]:
     if os.path.exists(path):
         pass
     else:
         os.makedirs(path)
 
-# paper_id = ObjectId('572abb4bbbddbd4d2dbd89dc')
-# paper = db.papers.find_one({'_id': paper_id})
-# f = open('{path}{name}.tex'.format(path=paper_path, name='11'), 'w')
-# f.write(klx_paper_render(paper))
-# f.close()
-item_ids = [
-    ObjectId("55dc2c0e5417d1698e554c3f"),
-    ObjectId("55dc2c575417d1698e554c43"),
-    ObjectId("55dfceca5417d14d2d0866ff"),
-    ObjectId("55dfd3315417d14e27e0f691"),
-    ObjectId("55dc2c0e5417d1698e554c3f"),
-    ObjectId("55dc2c575417d1698e554c43"),
-    ObjectId("55dfceca5417d14d2d0866ff"),
-    ObjectId("55dfd3315417d14e27e0f691"),
-    '55f69bf35417d174cc827da4',
-    ObjectId("55dc2c0e5417d1698e554c3f"),
-    ObjectId("55dc2c575417d1698e554c43"),
-    ObjectId("55dfceca5417d14d2d0866ff"),
-    ObjectId("55dfd3315417d14e27e0f691")
+
+item_ids = [  # math
+    '5368a442e13823417ff9bc67',
+    '54364cb30045fe48f83730ee',
+    '56d9474b5417d15b1626fe2e',
+    '56de8abd5417d15e130f8bbf',
+    '537dcc42e138230941ea408c',
+    '537dcc42e138230941ea40a0',
 ]
+
 item_ids = [
-    '55eb90085417d17be13a4b6a',
-    '55eb90085417d17be13a4b6e',
+    '54ed80230045fe3e0e532231',
 ]
-do_multi_items_test(1000, 500)
+
+# do_multi_items_test(56465, 500)
 # do_certain_items(item_ids, subject)
+paper_id = '54db033827ffa92ff08080c0'
+do_paper_test(paper_id, subject)
