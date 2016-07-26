@@ -21,58 +21,93 @@ from bson.objectid import ObjectId
 from pymongo import MongoClient
 
 
+def math_opr(s):
+    return s
+
+
+def text_opr(s):
+    return s
+
+
+def mode_dep_opr(s, math_opr, text_opr):
+
+    def _dealdisplay(s, idx):
+        if idx == 0:
+            text = s
+            text = text_opr(text)
+            s = text
+        else:
+            stop = s.find(ur'\]')
+            math = s[:stop]
+            math = math_opr(math)
+            text = s[stop:]
+            text = math_opr(text)
+            s = math + text
+        return s
+
+    def _dealinline(s, idx):
+        if idx == 0:
+            s = re.split(ur'(?<!\\)\\\[', s)
+            for idx, str in enumerate(s, start=0):
+                s[idx] = _dealdisplay(str, idx)
+            s = ur'\['.join(s)
+        else:
+            stop = s.find(ur'\)')
+            math = s[:stop]
+            math = math_opr(math)
+            k = s[stop:]
+            k = re.split(ur'(?<!\\)\\\[', k)
+            for idx, str in enumerate(k, start=0):
+                k[idx] = _dealdisplay(str, idx)
+            k = ur'\['.join(k)
+            s = math + k
+        return s
+
+    s = re.split(ur'(?<!\\)\\\(', s)
+    for idx, str in enumerate(s, start=0):
+        s[idx] = _dealinline(str, idx)
+    s = ur'\('.join(s)
+    return s
+
+
+def punc_in_img(s):  # by ningshuo
+    def _deal(s):
+        stop = s.find(ur'[[/img]]')
+        assert stop != -1
+        result = re.sub(ur'\uff0e',
+                        ur'.', s[:stop])
+        result = re.sub(ur'\uff1a',
+                        ur':', result)
+        result = re.sub(ur'\uff0c',
+                        ur',', result)
+        return result + s[stop:]
+
+    s = re.split(ur'\[\[img\]\]', s)
+    for idx, str in enumerate(s[1:], start=1):
+        s[idx] = _deal(str)
+    s = ur'[[img]]'.join(s)
+    return s
+
+
 def str2latex(ori):
-    def array_mathmode(s):
-        def _array_math_display(s):
+    def array_mathmode_cor(s):
+        def text_opr(s):
             s = re.sub(
                 ur'\\begin\s?{array}[\s\S]*?\\end\s?{array}', lambda x: ur'\[%s\]' % x.group(), s)
             return s
-
-        def _dealdisplay(s):
-            stop = s.find(ur'\]')
-            if stop == -1:
-                s = _array_math_display(s)
-            else:
-                math = s[:stop]
-                text = s[stop:]
-                text = _array_math_display(text)
-                s = math + text
-            return s
-
-        def _dealinline(s):
-            stop = s.find(ur'\)')
-            if stop == -1:
-                s = re.split(ur'(?<!\\)\\\[', s)
-                for idx, str in enumerate(s, start=0):
-                    s[idx] = _dealdisplay(str)
-                s = ur'\['.join(s)
-            else:
-                math = s[:stop]
-                k = s[stop:]
-                k = re.split(ur'(?<!\\)\\\[', k)
-                for idx, str in enumerate(k, start=0):
-                    k[idx] = _dealdisplay(str)
-                k = ur'\['.join(k)
-                s = math + k
-            return s
-
-        s = re.split(ur'(?<!\\)\\\(', s)
-        for idx, str in enumerate(s, start=0):
-            s[idx] = _dealinline(str)
-        s = ur'\('.join(s)
+        s = mode_dep_opr(s, math_opr, text_opr)
         return s
 
     def cn_in_mathmode(s):  # by ningshuo
 
-        def _deal_mathmode(s):
+        def math_opr(s):
             s = re.sub(ur'[\u4e00-\u9fa5]+',
                        lambda x: ur'\text{%s}' % x.group(), s)
             return s
 
-        def _deal_textmode(s):
-            latex_remaining_char = ['$', '%', '&', '#', '^', '_', ]
+        def text_opr(s):
+            # latex_remaining_char = ['$', '%', '&', '#', '^', '_', ]
             s = s.replace(u'\n', u'\\\\{}\n')
-            # for k in latex_remaining_char:
             s = re.sub(ur'(?<!\\)\$', u'\\$', s)
             s = re.sub(ur'(?<!\\)%', u'\\%', s)
             s = re.sub(ur'(?<!\\)&', u'\\&', s)
@@ -81,43 +116,7 @@ def str2latex(ori):
             s = re.sub(ur'(?<!\\)_', u'\\_', s)
             return s
 
-        def _dealdisplay(s):
-            stop = s.find(ur'\]')
-            if stop == -1:
-                s = _deal_textmode(s)
-            else:
-                math = s[:stop]
-                math = _deal_mathmode(math)
-                text = s[stop:]
-                text = _deal_textmode(text)
-                s = math + text
-            return s
-
-        def _dealinline(s):
-            stop = s.find(ur'\)')
-            if stop == -1:
-                s = re.split(ur'(?<!\\)\\\[', s)
-                for idx, str in enumerate(s, start=0):
-                    s[idx] = _dealdisplay(str)
-                s = ur'\['.join(s)
-            else:
-                math = s[:stop]
-                math = _deal_mathmode(math)
-                k = s[stop:]
-                k = re.split(ur'(?<!\\)\\\[', k)
-                for idx, str in enumerate(k, start=0):
-                    k[idx] = _dealdisplay(str)
-                k = ur'\['.join(k)
-                s = math + k
-            return s
-
-        s = array_mathmode(s)
-        s = re.split(ur'(?<!\\)\\\(', s)
-        for idx, str in enumerate(s, start=0):
-            s[idx] = _dealinline(str)
-        s = ur'\('.join(s)
-        s = s.replace(u'\\\\\n\[', u'\n\[')
-        s = s.replace(u'\]\\\\\n', u'\]\n')
+        s = mode_dep_opr(s, math_opr, text_opr)
         return s
 
     def array_col_correction(x):
@@ -178,11 +177,12 @@ def str2latex(ori):
         return s
 
     ori = unicode_2_latex(ori)
-
-    ori = re.sub(img_re4, ur'', ori)
-    print ori
-    ori = re.sub(img_re3, ur'', ori)
-    print ori
+    ori = punc_in_img(ori)
+    ori = re.sub(img_re3, deal_with_img, ori)
+    # ori = re.sub(img_re4, ur'', ori)
+    # print ori
+    # ori = re.sub(img_re3, ur'', ori)
+    # print ori
     ori = re.sub(ur'(?<!(?:\\|%))%', ur'\%', ori)
     ori = cn_in_mathmode(ori)
     ori = re.sub(
@@ -191,41 +191,19 @@ def str2latex(ori):
                  lambda x: u'\\uline{%s}' % x.group(1), ori)
     ori = re.sub(ur'\u005f\u005f+', ur'\\dd ', ori)
     ori = ori.replace(u'\n\n', '\n')
-    print ori
+    # print ori
     return ori
-
-
-def punc_in_img(s):  # by ningshuo
-    def _deal(s):
-        stop = s.find(ur'[[/img]]')
-        assert stop != -1
-        result = re.sub(ur'\uff0e',
-                        ur'.', s[:stop])
-        result = re.sub(ur'\uff1a',
-                        ur':', result)
-        result = re.sub(ur'\uff0c',
-                        ur',', result)
-        return result + s[stop:]
-
-    s = re.split(ur'\[\[img\]\]', s)
-    for idx, str in enumerate(s[1:], start=1):
-        s[idx] = _deal(str)
-    s = ur'[[img]]'.join(s)
-    return s
 
 
 def deal_with_img(s):  # 完成图片下载、大小读取、缩放、引用类型条件
     img = s.group(1)
-    print img
-    img = punc_in_img(img)
-    scale = 0.7
     scale = 0.6
     img_file = re.findall(img_file_re, img)[0]
     file_path_name = os.path.join(img_path, img_file)
     if not os.path.isfile(file_path_name):
         urllib.urlretrieve('{}{}'.format(
             img_url, img_file), file_path_name)
-        print img_file
+        # print img_file
     if 'src' in img:
         img_json = json.loads(img[7:-8])
     else:
@@ -253,8 +231,7 @@ def deal_with_img(s):  # 完成图片下载、大小读取、缩放、引用类�
     size.append('height=%spt' % size_h)
     size_tex = ','.join(size)
     raise_height = 0.5 * size_h - 1.6  #
-    print size_w, size_h
-    # print size_tex
+    # print size_w, size_h
     if size_w > 365:  # img display zoom
         img_tex = u'[[display]]\\includegraphics[width=\\optwidth]{{{}}}[[/display]]'.format(
             img_file)
@@ -279,8 +256,7 @@ def get_opts_head(opts):
         result = '\\fivch'
     elif len(opts) == 4:
         for opt in opts:
-            opt = punc_in_img(opt)
-            opt = re.sub(img_re3, deal_with_img, opt)
+            opt = str2latex(opt)
             opt_imgs = re.findall(img_file_re, opt)
             opt_imgs_inline = re.findall(
                 ur'\[\[inline\]\].*?\[\[/inline\]\]', opt)
@@ -324,8 +300,8 @@ def deal_desc_img(desc):
         'text': '',
         'imgs': '',
     }
-    desc = punc_in_img(desc)
-    s = re.sub(img_re3, deal_with_img, desc)
+    s = desc
+    print 2, s
     img_inpar = re.findall(ur'\[\[inpar\]\](.*?)\[\[/inpar\]\]', s)
     desc_text = re.sub(ur'\[\[inpar\]\](.*?)\[\[/inpar\]\]', u'', s)
     desc_text = re.sub(
@@ -335,7 +311,8 @@ def deal_desc_img(desc):
     img_inpar = u'\\ '.join(img_inpar)
 
     result['imgs'] = img_inpar
-    result['text'] = str2latex(desc_text)
+    result['text'] = desc_text
+    print 3, result
     return result
 
 
@@ -352,7 +329,7 @@ def deal_with_opt(opt, img_width, opts_head):
         size_h = re.findall(ur',height=(.*?)pt\]', opt_imgs)
         size_w = float(u''.join(size_w))
         size_h = float(u''.join(size_h))
-        print size_w, size_h
+        # print size_w, size_h
         arg = 'width'
         if size_w < size_h:
             # adjust the longer one between width end height
@@ -367,8 +344,7 @@ def deal_with_opt(opt, img_width, opts_head):
         opt_imgs.extend(re.findall(img_display_pattern, opt))
         opt_imgs.extend(re.findall(img_inpar_pattern, opt))
         opt_imgs = u''.join(opt_imgs)
-        # print opt_imgs
-    print [opt_text, opt_imgs]
+    # print [opt_text, opt_imgs]
     return [opt_text, opt_imgs]
 
 
@@ -382,7 +358,7 @@ def deal_with_qs(qs, item_type):
         #         opt_tex += '{%s}{%s}' % (opt[0], opt[1])
         #     qs_tex += str2latex(opt_tex)
         # else:
-        desc_tex = qs['desc']
+        desc_tex = str2latex(qs['desc'])
         qs_tex = deal_desc_img(desc_tex)
         opts = qs['opts']
         opt_tex = get_opts_head(opts)
@@ -397,7 +373,7 @@ def item_latex_render(item_id):
     item = db.items.find_one({'_id': item_id})
     qs_tex = u''
     if not item:
-        print item_id
+        # print item_id
         return '%%%%%%%%%%%%%%%%'
     tex = '\r%% {} {}\r'.format(
         item_id, item['data']['type'])
@@ -409,7 +385,9 @@ def item_latex_render(item_id):
             desc = item['data']['stem']
         else:
             desc = qs['desc']
+        desc = str2latex(desc)
         desc = deal_desc_img(desc)
+        print desc
         opts = qs['opts']
         opts_head = get_opts_head(opts)
         opt_tex = opts_head
@@ -421,13 +399,14 @@ def item_latex_render(item_id):
         # desc['text'], opt_tex, desc['imgs'], varwidth)
         tex += u'\\klxitemm{%s}{%s%s}' % (desc['imgs'],
                                           desc['text'], opt_tex)
+        print 1, desc['text']
 
     elif item['data']['type'] in [1003, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 4003, 4004, 3003, 3004]:
         tex += '\\begin{questions}\n'  # begin of an item
         # tex += '{{{}}}'.format(width_map[1003])
         if len(item['data']['stem']) == 0:
             if len(item['data']['qs']) == 1:
-                print item['_id']
+                # print item['_id']
                 qs = item['data']['qs']
                 stem_buffer = deal_desc_img()
                 tex += deal_with_qs(qs, item['data']['type'])
@@ -451,11 +430,11 @@ def item_latex_render(item_id):
                 tex += qs_tex
                 # tex += u'\\end{subquestions}\n'
         else:
-            print 'yes'
+            # print 'yes'
             stem_buffer = deal_desc_img(item['data']['stem'])
             tex += u'\\klxitemm{%s}{%s' % (
                 stem_buffer['imgs'], stem_buffer['text'])
-            print tex
+            # print tex
             if len(item['data']['qs'][0]['desc']) != 0:
                 # tex += u'\\vspace{-1em}\\begin{subquestions}\n'
                 for qs in item['data']['qs']:
@@ -520,7 +499,7 @@ def get_items(item_ids, subject):
     tex = template
     dbname = subject
     for item_id in item_ids:
-        print item_id
+        # print item_id
         tex += item_latex_render(ObjectId(item_id))
         # tex += '\\\\'  # used for multi-items
     tex += u'\n\\end{document}'
@@ -539,7 +518,7 @@ def do_multi_items_test(skip, limit):
     f = open(os.path.join(paper_path, '{}.tex'.format(skip)), 'w')
     f.write(tex)
     f.close()
-    print skip
+    # print skip
 
 
 def do_certain_items(item_ids, subject):
@@ -551,7 +530,7 @@ def do_certain_items(item_ids, subject):
 
 def do_paper_test(paper_id, subject):
     paper = db.papers.find_one({'_id': ObjectId(paper_id)})
-    print type(paper)
+    # print type(paper)
     tex = klx_paper_render(paper)
     f = open(os.path.join(paper_path, '{}.tex'.format(paper_id)), 'w')
     f.write(tex)
