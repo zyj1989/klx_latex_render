@@ -17,17 +17,11 @@ from bson.objectid import ObjectId
 from pymongo import MongoClient
 
 
-def times(x):
-    return x * 3
+def unicode_chem_cor(ori):
+    ori = re.sub(ur'\s*?}', ur'}', ori)
+    ori = re.sub(ur'(?<!(?:-|=))>', lambda x: ur'\gt', ori)
+    ori = re.sub(ur'<(?!(?:-|=))', lambda x: ur'\lt', ori)
+    return ori
 
-
-def test(x, f):
-    def f(x):
-        return x + 5
-    return times(f(x))
-
-
-def f(x):
-    return x + 1
-
-print test(1, f)
+a = u'<= 123123 => asda < asda> '
+print unicode_chem_cor(a)

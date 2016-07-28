@@ -196,54 +196,67 @@ def str2latex(ori):
 
 
 def deal_with_img(s):  # 完成图片下载、大小读取、缩放、引用类型条件
-    img = s.group(1)
-    scale = 0.6
-    img_file = re.findall(img_file_re, img)[0]
-    file_path_name = os.path.join(img_path, img_file)
-    if not os.path.isfile(file_path_name):
-        urllib.urlretrieve('{}{}'.format(
-            img_url, img_file), file_path_name)
-        # print img_file
-    if 'src' in img:
-        img_json = json.loads(img[7:-8])
-    else:
-        img_json = ''
-    im = Image.open(file_path_name)
-    size = []
+    def fetch_img(img):
+        scale = 0.6
+        img_file = re.findall(img_file_re, img)[0]
+        file_path_name = os.path.join(img_path, img_file)
+        if not os.path.isfile(file_path_name):
+            urllib.urlretrieve('{}{}'.format(
+                img_url, img_file), file_path_name)
+            # print img_file
+        if 'src' in img:
+            img_json = json.loads(img[7:-8])
+        else:
+            img_json = ''
+        im = Image.open(file_path_name)
+        size = []
 
-    if 'height' not in img_json:
-        if 'width' not in img_json:
-            size_w = im.size[0] * scale
-            size_h = im.size[1] * scale
+        if 'height' not in img_json:
+            if 'width' not in img_json:
+                size_w = im.size[0] * scale
+                size_h = im.size[1] * scale
+            else:
+                size_w = int(img_json['width']) * scale
+                mag = size_w / im.size[0]
+                size_h = im.size[1] * mag
         else:
-            size_w = int(img_json['width']) * scale
-            mag = size_w / im.size[0]
-            size_h = im.size[1] * mag
-    else:
-        if 'width' not in img_json:
-            size_h = int(img_json['height']) * scale
-            mag = size_h / im.size[1]
-            size_w = im.size[0] * mag
-        else:
-            size_w = int(img_json['width']) * scale
-            size_h = int(img_json['height']) * scale
-    size.append('width=%spt' % size_w)
-    size.append('height=%spt' % size_h)
-    size_tex = ','.join(size)
-    raise_height = 0.5 * size_h - 1.6  #
-    # print size_w, size_h
-    if size_w > 365:  # img display zoom
-        img_tex = u'[[display]]\\includegraphics[width=\\optwidth]{{{}}}[[/display]]'.format(
-            img_file)
-    elif size_h < 25:  # img inline
-        img_tex = u'[[inline]]\ \\raisebox{{-{}pt}}{{\\includegraphics[{}]{{{}}}}}\ [[/inline]]'.format(
-            raise_height, size_tex, img_file)
-    elif size_w > 200:  # img display real
-        img_tex = u'[[display]]\\includegraphics[{}]{{{}}}[[/display]]'.format(
-            size_tex, img_file)
-    else:  # img inpar
-        img_tex = u'[[inpar]]\\includegraphics[{}]{{{}}}[[/inpar]]'.format(
-            size_tex, img_file)
+            if 'width' not in img_json:
+                size_h = int(img_json['height']) * scale
+                mag = size_h / im.size[1]
+                size_w = im.size[0] * mag
+            else:
+                size_w = int(img_json['width']) * scale
+                size_h = int(img_json['height']) * scale
+        size.append('width=%spt' % size_w)
+        size.append('height=%spt' % size_h)
+        size_tex = ','.join(size)
+        raise_height = 0.5 * size_h - 3.3  #
+        result = {
+            'size_h': size_h,
+            'size_w': size_w,
+            'img_file': img_file,
+            'raise_height': raise_height,
+            'size_tex': size_tex
+        }
+        return result
+
+    def trd_img_speci(img_info):
+        if img_info['size_w'] > 365:  # img display zoom
+            img_tex = u'[[display]]\\includegraphics[width=\\optwidth]{{{}}}[[/display]]'.format(
+                img_info['img_file'])
+        elif img_info['size_h'] < 25:  # img inline
+            img_tex = u'[[inline]]\ \\raisebox{{-{}pt}}{{\\includegraphics[{}]{{{}}}}}\ [[/inline]]'.format(
+                img_info['raise_height'], img_info['size_tex'], img_info['img_file'])
+        elif img_info['size_w'] > 200:  # img display real
+            img_tex = u'[[display]]\\includegraphics[{}]{{{}}}[[/display]]'.format(
+                img_info['size_tex'], img_info['img_file'])
+        else:  # img inpar
+            img_tex = u'[[inpar]]\\includegraphics[{}]{{{}}}[[/inpar]]'.format(
+                img_info['size_tex'], img_info['img_file'])
+        return img_tex
+    img = s.group(1)
+    img_info = fetch_img(img)
+    img_tex = trd_img_speci(img_info)
     return img_tex
 
 
@@ -431,7 +444,8 @@ def item_latex_render(item_id):
                 # tex += u'\\end{subquestions}\n'
         else:
             # print 'yes'
-            stem_buffer = deal_desc_img(item['data']['stem'])
+
+            stem_buffer = deal_desc_img(str2latex(item['data']['stem']))
             tex += u'\\klxitemm{%s}{%s' % (
                 stem_buffer['imgs'], stem_buffer['text'])
             # print tex
@@ -624,7 +638,8 @@ item_ids = [  # math
 
 item_ids = [
     '56e91a9f5417d15b16270324',
-    '54d3175c0045fe3e0e531c94'
+    '54d3175c0045fe3e0e531c94',
+    # '53b4dab3e13823317fef6700',
 ]
 
 # do_multi_items_test(56465, 500)

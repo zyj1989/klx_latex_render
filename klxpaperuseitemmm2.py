@@ -19,105 +19,162 @@ import StringIO
 from PIL import Image
 from bson.objectid import ObjectId
 from pymongo import MongoClient
+from func import show_pretty_dict
+
+
+def math_opr(s):
+    return s
+
+
+def text_opr(s):
+    return s
+
+
+def inline_img_speci(s):
+    img = s.group(1)
+    img_info = fetch_img(img)
+    img_tex = u'[[inline]]\ \\raisebox{{-{}pt}}{{\\includegraphics[{}]{{{}}}}}\ [[/inline]]'.format(
+        img_info['raise_height'], img_info['size_tex'], img_info['img_file'])
+    return img_tex
+
+
+def ninline_img_speci(s):
+    img = s.group(1)
+    img_info = fetch_img(img)
+    if img_info['size_w'] > 365:  # img display zoom
+        img_tex = u'[[display]]\\includegraphics[width=\\optwidth]{{{}}}[[/display]]'.format(
+            img_info['img_file'])
+    elif img_info['size_w'] > 180:  # img display real
+        img_tex = u'[[display]]\\includegraphics[{}]{{{}}}[[/display]]'.format(
+            img_info['size_tex'], img_info['img_file'])
+    else:  # img inpar
+        img_tex = u'[[inpar]]\\includegraphics[{}]{{{}}}[[/inpar]]'.format(
+            img_info['size_tex'], img_info['img_file'])
+    return img_tex
+
+
+def display_img_speci(s):
+    img = s.group(1)
+    img_info = fetch_img(img)
+    img_tex = u'\\includegraphics[{}]{{{}}}'.format(
+        img_info['size_tex'], img_info['img_file'])
+    return img_tex
+
+
+def imgs_opr(s):
+    def _line_opr(line):
+        s = re.sub(img_re3, u'', line)
+        s = re.sub(ur'\s', u'', s)
+        non_img_text = len(s)
+        imgs_cnt = len(re.findall(img_re3, line))
+        if non_img_text != 0:
+            line = re.sub(img_re3, inline_img_speci, line)
+        elif imgs_cnt == 1:
+            line = re.sub(img_re3, ninline_img_speci, line)
+        elif imgs_cnt > 1:
+            line = re.sub(img_re3, display_img_speci, line)
+            line = u'[[display]]' + line + u'[[/display]]'
+        return line
+    s = re.split('\n', s)
+    for idx, line in enumerate(s, start=0):
+        s[idx] = _line_opr(line)
+
+    s = u'\n'.join(s)
+    return s
+
+
+def mode_dep_opr(s, math_opr, text_opr):
+
+    def _dealdisplay(s, idx):
+        if idx == 0:
+            text = s
+            text = text_opr(text)
+            s = text
+        else:
+            stop = s.find(ur'\]')
+            stopp = stop + 2
+            math = s[:stop]
+            math = math_opr(math)
+            text = s[stopp:]
+            text = text_opr(text)
+            s = math + ur'\]' + text
+        return s
+
+    def _dealinline(s, idx):
+        if idx == 0:
+            s = re.split(ur'(?<!\\)\\\[', s)
+            for idx, str in enumerate(s, start=0):
+                s[idx] = _dealdisplay(str, idx)
+            s = ur'\['.join(s)
+        else:
+            stop = s.find(ur'\)')
+            math = s[:stop]
+            math = math_opr(math)
+            stopp = stop + 2
+            k = s[stopp:]
+            k = re.split(ur'(?<!\\)\\\[', k)
+            for idx, str in enumerate(k, start=0):
+                k[idx] = _dealdisplay(str, idx)
+            k = ur'\['.join(k)
+            s = math + ur'\)' + k
+        return s
+
+    s = re.split(ur'(?<!\\)\\\(', s)
+    for idx, str in enumerate(s, start=0):
+        s[idx] = _dealinline(str, idx)
+    s = ur'\('.join(s)
+    return s
+
+
+def punc_in_img(s):  # by ningshuo
+    def _deal(s):
+        stop = s.find(ur'[[/img]]')
+        assert stop != -1
+        result = re.sub(ur'\uff0e',
+                        ur'.', s[:stop])
+        result = re.sub(ur'\uff1a',
+                        ur':', result)
+        result = re.sub(ur'\uff0c',
+                        ur',', result)
+        return result + s[stop:]
+
+    s = re.split(ur'\[\[img\]\]', s)
+    for idx, str in enumerate(s[1:], start=1):
+        s[idx] = _deal(str)
+
+    s = ur'[[img]]'.join(s)
+    return s
 
 
 def str2latex(ori):
-    def array_mathmode(s):
-        def _array_math_display(s):
+    def array_mathmode_cor(s):
+        def text_opr(s):
             s = re.sub(
                 ur'\\begin\s?{array}[\s\S]*?\\end\s?{array}', lambda x: ur'\[%s\]' % x.group(), s)
             return s
-
-        def _dealdisplay(s):
-            stop = s.find(ur'\]')
-            if stop == -1:
-                s = _array_math_display(s)
-            else:
-                math = s[:stop]
-                text = s[stop:]
-                text = _array_math_display(text)
-                s = math + text
-            return s
-
-        def _dealinline(s):
-            stop = s.find(ur'\)')
-            if stop == -1:
-                s = re.split(ur'(?<!\\)\\\[', s)
-                for idx, str in enumerate(s, start=0):
-                    s[idx] = _dealdisplay(str)
-                s = ur'\['.join(s)
-            else:
-                math = s[:stop]
-                k = s[stop:]
-                k = re.split(ur'(?<!\\)\\\[', k)
-                for idx, str in enumerate(k, start=0):
-                    k[idx] = _dealdisplay(str)
-                k = ur'\['.join(k)
-                s = math + k
-            return s
-
-        s = re.split(ur'(?<!\\)\\\(', s)
-        for idx, str in enumerate(s, start=0):
-            s[idx] = _dealinline(str)
-        s = ur'\('.join(s)
+        s = mode_dep_opr(s, math_opr, text_opr)
         return s
 
     def cn_in_mathmode(s):  # by ningshuo
 
-        def _deal_mathmode(s):
+        def math_opr(s):
             s = re.sub(ur'[\u4e00-\u9fa5]+',
                        lambda x: ur'\text{%s}' % x.group(), s)
             return s
 
-        def _deal_textmode(s):
-            latex_remaining_char = ['$', '%', '&', '#', '^', '_', ]
-            s = s.replace(u'\n', u'\\par ')
-            # for k in latex_remaining_char:
+        def text_opr(s):
+            # latex_remaining_char = ['$', '%', '&', '#', '^', '_', ]
             s = re.sub(ur'(?<!\\)\$', u'\\$', s)
             s = re.sub(ur'(?<!\\)%', u'\\%', s)
             s = re.sub(ur'(?<!\\)&', u'\\&', s)
             s = re.sub(ur'(?<!\\)#', u'\\#', s)
             s = re.sub(ur'(?<!\\)\^', u'\\^', s)
             s = re.sub(ur'(?<!\\)_', u'\\_', s)
+            s = imgs_opr(s)
+            s = s.replace(u'\n', u'\\par ')
             return s
 
-        def _dealdisplay(s):
-            stop = s.find(ur'\]')
-            if stop == -1:
-                s = _deal_textmode(s)
-            else:
-                math = s[:stop]
-                math = _deal_mathmode(math)
-                text = s[stop:]
-                text = _deal_textmode(text)
-                s = math + text
-            return s
-
-        def _dealinline(s):
-            stop = s.find(ur'\)')
-            if stop == -1:
-                s = re.split(ur'(?<!\\)\\\[', s)
-                for idx, str in enumerate(s, start=0):
-                    s[idx] = _dealdisplay(str)
-                s = ur'\['.join(s)
-            else:
-                math = s[:stop]
-                math = _deal_mathmode(math)
-                k = s[stop:]
-                k = re.split(ur'(?<!\\)\\\[', k)
-                for idx, str in enumerate(k, start=0):
-                    k[idx] = _dealdisplay(str)
-                k = ur'\['.join(k)
-                s = math + k
-            return s
-
-        s = array_mathmode(s)
-        s = re.split(ur'(?<!\\)\\\(', s)
-        for idx, str in enumerate(s, start=0):
-            s[idx] = _dealinline(str)
-        s = ur'\('.join(s)
-        s = s.replace(u'\\\\\n\[', u'\n\[')
-        s = s.replace(u'\]\\\\\n', u'\]\n')
+        s = mode_dep_opr(s, math_opr, text_opr)
         return s
 
     def array_col_correction(x):
@@ -138,7 +195,7 @@ def str2latex(ori):
 
     def unicode_2_latex(s):
         unicode2latex = [
-            (ur'\u2460', ur'{\text{\ding{172}}}'),
+            (ur'\u2460', ur'{\text{\ding{172}}}'),  # circled numbers
             (ur'\u2461', ur'{\text{\ding{173}}}'),
             (ur'\u2462', ur'{\text{\ding{174}}}'),
             (ur'\u2463', ur'{\text{\ding{175}}}'),
@@ -148,7 +205,7 @@ def str2latex(ori):
             (ur'\u2467', ur'{\text{\ding{179}}}'),
             (ur'\u2468', ur'{\text{\ding{180}}}'),
             (ur'\u2469', ur'{\text{\ding{181}}}'),
-            (ur'\u2160', ur'{\text{\(\mathrm{I}\)}}'),
+            (ur'\u2160', ur'{\text{\(\mathrm{I}\)}}'),  # roman numbers
             (ur'\u2161', ur'{\text{\(\mathrm{II}\)}}'),
             (ur'\u2162', ur'{\text{\(\mathrm{III}\)}}'),
             (ur'\u2163', ur'{\text{\(\mathrm{IV}\)}}'),
@@ -166,66 +223,58 @@ def str2latex(ori):
             (ur'{align}', ur'{matrix}'),
             (ur'{split}', ur'{aligned}'),
             (ur'\uff1d', ur'='),
+            (ur'\u2550', ur'='),
             (ur'\Omega', ur'\text{$\Omega$}'),
             (ur'\style{font-family:Times New Roman}{g}', ur'\textsl{g}'),
             (ur'_\rm', ur'_\phrm'),
             (ur'^\rm', ur'^\phrm'),
             (ur'[[nn]]', ur'\dd '),
             (ur'\u200b', ur''),
+            (ur'\u2264', ur'\leqslant '),  # \ce correction
+            (ur'\u2265', ur'\geqslant '),
+            (ur'\uff1c', ur'<'),
+            (ur'\uff1e', ur'>'),
+            (ur'\ufe63', ur'-'),
+            (ur'\downarrow', ur'\downarrow{}'),
+            (ur'->', ur' ->'),
+            (ur'<=>', ur' <=>'),
+            (ur'<-', ur' <-'),
         ]
         for uni, latex in unicode2latex:
             s = s.replace(uni, latex)
         return s
 
-    ori = unicode_2_latex(ori)
+    def unicode_chem_cor(ori):
+        ori = re.sub(ur'\s*?}', ur'}', ori)
+        ori = re.sub(ur'(?<!(?:-|=))>', lambda x: ur'\gt', ori)
+        ori = re.sub(ur'<(?!(?:-|=))', lambda x: ur'\lt', ori)
+        return ori
 
-    ori = re.sub(img_re4, ur'', ori)
-    print ori
-    ori = re.sub(img_re3, ur'', ori)
-    print ori
-    ori = re.sub(ur'(?<!(?:\\|%))%', ur'\%', ori)
+    ori = unicode_2_latex(ori)
+    ori = punc_in_img(ori)
+    ori = array_mathmode_cor(ori)
     ori = cn_in_mathmode(ori)
+    # ori = re.sub(img_re3, deal_with_img, ori)
+    ori = re.sub(ur'(?<!(?:\\|%))%', ur'\%', ori)
     ori = re.sub(
         ur'\\begin\s?{array}[\s\S]*?\\end\s?{array}', array_col_correction, ori)
     ori = re.sub(ur'\[\[un\]\]([\s\S]*?)\[\[/un\]\]',
                  lambda x: u'\\uline{%s}' % x.group(1), ori)
     ori = re.sub(ur'\u005f\u005f+', ur'\\dd ', ori)
     ori = ori.replace(u'\n\n', '\n')
-    print ori
+    ori = unicode_chem_cor(ori)
+    # print ori
     return ori
 
 
-def punc_in_img(s):  # by ningshuo
-    def _deal(s):
-        stop = s.find(ur'[[/img]]')
-        assert stop != -1
-        result = re.sub(ur'\uff0e',
-                        ur'.', s[:stop])
-        result = re.sub(ur'\uff1a',
-                        ur':', result)
-        result = re.sub(ur'\uff0c',
-                        ur',', result)
-        return result + s[stop:]
-
-    s = re.split(ur'\[\[img\]\]', s)
-    for idx, str in enumerate(s[1:], start=1):
-        s[idx] = _deal(str)
-    s = ur'[[img]]'.join(s)
-    return s
-
-
-def deal_with_img(s):  # 完成图片下载、大小读取、缩放、引用类型条件
-    img = s.group(1)
-    print img
-    img = punc_in_img(img)
-    scale = 0.7
+def fetch_img(img):  # download imgs and get size
     scale = 0.6
     img_file = re.findall(img_file_re, img)[0]
     file_path_name = os.path.join(img_path, img_file)
     if not os.path.isfile(file_path_name):
         urllib.urlretrieve('{}{}'.format(
             img_url, img_file), file_path_name)
-        print img_file
+        # print img_file
     if 'src' in img:
         img_json = json.loads(img[7:-8])
     else:
@@ -252,21 +301,37 @@ def deal_with_img(s):  # 完成图片下载、大小读取、缩放、引用类�
     size.append('width=%spt' % size_w)
     size.append('height=%spt' % size_h)
     size_tex = ','.join(size)
-    raise_height = 0.5 * size_h - 1.6  #
-    print size_w, size_h
-    # print size_tex
-    if size_w > 365:  # img display zoom
+    raise_height = 0.5 * size_h - 3.3  #
+    result = {
+        'size_h': size_h,
+        'size_w': size_w,
+        'img_file': img_file,
+        'raise_height': raise_height,
+        'size_tex': size_tex
+    }
+    return result
+
+
+def trd_img_speci(img_info):  # add some specification arround imgs
+    if img_info['size_w'] > 365:  # img display zoom
         img_tex = u'[[display]]\\includegraphics[width=\\optwidth]{{{}}}[[/display]]'.format(
-            img_file)
-    elif size_h < 25:  # img inline
+            img_info['img_file'])
+    elif img_info['size_h'] < 25:  # img inline
         img_tex = u'[[inline]]\ \\raisebox{{-{}pt}}{{\\includegraphics[{}]{{{}}}}}\ [[/inline]]'.format(
-            raise_height, size_tex, img_file)
-    elif size_w > 200:  # img display real
+            img_info['raise_height'], img_info['size_tex'], img_info['img_file'])
+    elif img_info['size_w'] > 200:  # img display real
         img_tex = u'[[display]]\\includegraphics[{}]{{{}}}[[/display]]'.format(
-            size_tex, img_file)
+            img_info['size_tex'], img_info['img_file'])
     else:  # img inpar
         img_tex = u'[[inpar]]\\includegraphics[{}]{{{}}}[[/inpar]]'.format(
-            size_tex, img_file)
+            img_info['size_tex'], img_info['img_file'])
+    return img_tex
+
+
+def deal_with_img(s):  # 完成图片下载、大小读取、缩放、引用类型条件
+    img = s.group(1)
+    img_info = fetch_img(img)
+    img_tex = trd_img_speci(img_info)
     return img_tex
 
 
@@ -279,8 +344,7 @@ def get_opts_head(opts):
         result = '\\fivch'
     elif len(opts) == 4:
         for opt in opts:
-            opt = punc_in_img(opt)
-            opt = re.sub(img_re3, deal_with_img, opt)
+            opt = str2latex(opt)
             opt_imgs = re.findall(img_file_re, opt)
             opt_imgs_inline = re.findall(
                 ur'\[\[inline\]\].*?\[\[/inline\]\]', opt)
@@ -324,8 +388,7 @@ def deal_desc_img(desc):
         'text': '',
         'imgs': '',
     }
-    desc = punc_in_img(desc)
-    s = re.sub(img_re3, deal_with_img, desc)
+    s = desc
     img_inpar = re.findall(ur'\[\[inpar\]\](.*?)\[\[/inpar\]\]', s)
     desc_text = re.sub(ur'\[\[inpar\]\](.*?)\[\[/inpar\]\]', u'', s)
     desc_text = re.sub(
@@ -335,13 +398,12 @@ def deal_desc_img(desc):
     img_inpar = u'\\ '.join(img_inpar)
 
     result['imgs'] = img_inpar
-    result['text'] = str2latex(desc_text)
+    result['text'] = desc_text
     return result
 
 
 def deal_with_opt(opt, img_width, opts_head):
-    opt = punc_in_img(opt)
-    opt = re.sub(img_re3, deal_with_img, opt)
+    opt = str2latex(opt)
     if opts_head == '\\imgch':
         opt_text = re.sub(img_display_pattern, '', opt)
         opt_text = re.sub(img_inpar_pattern, '', opt_text)
@@ -352,7 +414,7 @@ def deal_with_opt(opt, img_width, opts_head):
         size_h = re.findall(ur',height=(.*?)pt\]', opt_imgs)
         size_w = float(u''.join(size_w))
         size_h = float(u''.join(size_h))
-        print size_w, size_h
+        # print size_w, size_h
         arg = 'width'
         if size_w < size_h:
             # adjust the longer one between width end height
@@ -367,8 +429,7 @@ def deal_with_opt(opt, img_width, opts_head):
         opt_imgs.extend(re.findall(img_display_pattern, opt))
         opt_imgs.extend(re.findall(img_inpar_pattern, opt))
         opt_imgs = u''.join(opt_imgs)
-        # print opt_imgs
-    print [opt_text, opt_imgs]
+    # print [opt_text, opt_imgs]
     return [opt_text, opt_imgs]
 
 
@@ -382,7 +443,7 @@ def deal_with_qs(qs, item_type):
         #         opt_tex += '{%s}{%s}' % (opt[0], opt[1])
         #     qs_tex += str2latex(opt_tex)
         # else:
-        desc_tex = qs['desc']
+        desc_tex = str2latex(qs['desc'])
         qs_tex = deal_desc_img(desc_tex)
         opts = qs['opts']
         opt_tex = get_opts_head(opts)
@@ -397,7 +458,7 @@ def item_latex_render(item_id):
     item = db.items.find_one({'_id': item_id})
     qs_tex = u''
     if not item:
-        print item_id
+        # print item_id
         return '%%%%%%%%%%%%%%%%'
     tex = '\r%% {} {}\r'.format(
         item_id, item['data']['type'])
@@ -409,6 +470,7 @@ def item_latex_render(item_id):
             desc = item['data']['stem']
         else:
             desc = qs['desc']
+        desc = str2latex(desc)
         desc = deal_desc_img(desc)
         opts = qs['opts']
         opts_head = get_opts_head(opts)
@@ -427,7 +489,7 @@ def item_latex_render(item_id):
         # tex += '{{{}}}'.format(width_map[1003])
         if len(item['data']['stem']) == 0:
             if len(item['data']['qs']) == 1:
-                print item['_id']
+                # print item['_id']
                 qs = item['data']['qs']
                 stem_buffer = deal_desc_img()
                 tex += deal_with_qs(qs, item['data']['type'])
@@ -452,10 +514,12 @@ def item_latex_render(item_id):
                 # tex += u'\\end{subquestions}\n'
         else:
             print 'yes'
-            stem_buffer = deal_desc_img(item['data']['stem'])
+            stem_buffer = deal_desc_img(str2latex(item['data']['stem']))
+            print str2latex(item['data']['stem'])
             tex += u'\\klxitemm{%s}{%s' % (
                 stem_buffer['imgs'], stem_buffer['text'])
-            print tex
+
+            # print tex
             if len(item['data']['qs'][0]['desc']) != 0:
                 # tex += u'\\vspace{-1em}\\begin{subquestions}\n'
                 for qs in item['data']['qs']:
@@ -520,7 +584,7 @@ def get_items(item_ids, subject):
     tex = template
     dbname = subject
     for item_id in item_ids:
-        print item_id
+        # print item_id
         tex += item_latex_render(ObjectId(item_id))
         # tex += '\\\\'  # used for multi-items
     tex += u'\n\\end{document}'
@@ -539,7 +603,7 @@ def do_multi_items_test(skip, limit):
     f = open(os.path.join(paper_path, '{}.tex'.format(skip)), 'w')
     f.write(tex)
     f.close()
-    print skip
+    # print skip
 
 
 def do_certain_items(item_ids, subject):
@@ -551,7 +615,7 @@ def do_certain_items(item_ids, subject):
 
 def do_paper_test(paper_id, subject):
     paper = db.papers.find_one({'_id': ObjectId(paper_id)})
-    print type(paper)
+    # print type(paper)
     tex = klx_paper_render(paper)
     f = open(os.path.join(paper_path, '{}.tex'.format(paper_id)), 'w')
     f.write(tex)
@@ -644,11 +708,14 @@ item_ids = [  # math
 ]
 
 item_ids = [
-    '56e91a9f5417d15b16270324',
-    '54d3175c0045fe3e0e531c94'
+    # '56e91a9f5417d15b16270324',
+    # '54d3175c0045fe3e0e531c94',
+    '53b4dab3e13823317fef6700',
+    '5359165ce1382357d4b0bf54',
+    ObjectId("537dcb52e138230941ea01ab")
 ]
 
 # do_multi_items_test(56465, 500)
-do_certain_items(item_ids, subject)
-# paper_id = ObjectId("54db033827ffa92ff08080c0")
-# do_paper_test(paper_id, subject)
+# do_certain_items(item_ids, subject)
+paper_id = ObjectId("54db033827ffa92ff08080c0")
+do_paper_test(paper_id, subject)
