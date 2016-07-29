@@ -17,11 +17,6 @@ from bson.objectid import ObjectId
 from pymongo import MongoClient
 
 
-def unicode_chem_cor(ori):
-    ori = re.sub(ur'\s*?}', ur'}', ori)
-    ori = re.sub(ur'(?<!(?:-|=))>', lambda x: ur'\gt', ori)
-    ori = re.sub(ur'<(?!(?:-|=))', lambda x: ur'\lt', ori)
-    return ori
-
-a = u'<= 123123 => asda < asda> '
-print unicode_chem_cor(a)
+print range(0, 5)
+print range(5, 10)
+print range(0)
