@@ -158,13 +158,14 @@ def str2latex(ori):
     def cn_in_mathmode(s):  # by ningshuo
 
         def math_opr(s):
-            s = re.sub(ur'[\u4e00-\u9fa5,\u3001,\u2103,\u2191,\u2193]+',
+            s = re.sub(ur'[\u4e00-\u9fa5\u3001\u2103\u2191\u2193]+',
                        lambda x: ur'\text{%s}' % x.group(), s)
             unicode_cor = [
                 (ur'\u2264', ur'\leqslant '),
                 (ur'\u2265', ur'\geqslant '),
                 (ur'\u03c9', ur'\omega '),
                 (ur'\u03c6', ur'\phi '),
+                (ur'\u002C', ur'\uff0c '),
             ]
             for k, v in unicode_cor:
                 s = s.replace(k, v)
@@ -406,7 +407,7 @@ def deal_ans_img(s):
 
 def deal_with_opt(opt, img_width, opts_head):
 
-    if opts_head == '\\imgch':
+    if opts_head == '\\imgchold':
         opt_text = re.sub(img_display_pattern, '', opt)
         opt_text = re.sub(img_inpar_pattern, '', opt_text)
         opt_text = re.sub(img_inline_pattern, '', opt_text)
@@ -423,6 +424,12 @@ def deal_with_opt(opt, img_width, opts_head):
             arg = 'height'
         opt_imgs = re.sub(ur'\[.*?\]', ur'[%s=%s\\optwidth]' %
                           (arg, img_width), opt_imgs)
+    elif opts_head == '\\imgch':
+        opt_text = re.sub(img_display_pattern, '', opt)
+        opt_text = re.sub(img_inpar_pattern, '', opt_text)
+        opt_text = re.sub(img_inline_pattern, '', opt_text)
+        opt_imgs = re.findall(ur'\]\](.*?)\[\[/', opt)
+        opt_imgs = u''.join(opt_imgs)
 
     else:
         opt_imgs = []
@@ -431,7 +438,7 @@ def deal_with_opt(opt, img_width, opts_head):
         opt = re.sub(img_inpar_pattern, lambda x: x.group(1), opt)
         opt_text = opt
     # print [opt_text, opt_imgs]
-    opt_text = opt_text.replace(u'\\par', u'\\\\ ')
+    # opt_text = opt_text.replace(u'\\par', u'\\\\ ')
     return [opt_text, opt_imgs]
 
 
@@ -482,9 +489,9 @@ def item_latex_render(item_id):
         # tex += '{{{}}}'.format(width_map[1003])
         if len(item['data']['stem']) == 0:
             if len(item['data']['qs']) == 1:
-                qs = item['data']['qs']
-                tex += u'\klxitemm{}{%s}' % deal_with_qs(
-                    qs, item['data']['type'])
+                qs = item['data']['qs'][0]
+                qs_tex = deal_with_qs(qs, item['data']['type'])
+                tex += u'\klxitemm{%s}{%s' % (qs_tex['imgs'], qs_tex['text'])
             else:
                 for qs in item['data']['qs']:
                     qss_tex = u''
@@ -563,8 +570,7 @@ def itemans_latex_render(item_id):
         else:
             exp = str2latex(qs['exp'])
             exp = deal_ans_img(exp)
-            exp = u'解析：' + exp
-            tex += u'\klxitemans{}{%s}' % exp
+            tex += u'\klxitemans{%s}' % exp
     elif item['data']['type'] in [1002, 2002, 3002, 4002]:
         qs = item['data']['qs'][0]
         ans = str2latex(qs['ans'])
@@ -572,7 +578,7 @@ def itemans_latex_render(item_id):
         exp = deal_ans_img(exp)
         if exp != '':
             exp = u'解析：' + exp
-        tex += u'\klxitemans{}{%s \hspace{1em}%s}' % (ans, exp)
+        tex += u'\klxitemans{%s \hspace{1em}%s}' % (ans, exp)
     else:
         if len(item['data']['qs']) == 1:
             qs = item['data']['qs'][0]
@@ -580,7 +586,7 @@ def itemans_latex_render(item_id):
             exp = deal_ans_img(str2latex(qs['exp']))
             if exp != '':
                 exp = u'解析：' + exp
-            tex += u'\klxitemans{}{%s\hspace{1em}%s}' % (ans, exp)
+            tex += u'\klxitemans{%s\hspace{1em}%s}' % (ans, exp)
         else:
             tex_buffer = ''
             for qs in item['data']['qs']:
@@ -588,8 +594,8 @@ def itemans_latex_render(item_id):
                 exp = deal_ans_img(str2latex(qs['exp']))
                 if exp != '':
                     exp = u'解析：' + exp
-                tex_buffer += '\klxqsans{}{%s\hspace{1em}%s}' % (ans, exp)
-            tex += u'\klxitemans{}{%s}' % tex_buffer
+                tex_buffer += '\klxqsans{%s\hspace{1em}%s}' % (ans, exp)
+            tex += u'\klxitemans{%s}' % tex_buffer
     tex += u'\\end{questions}'
     return tex
 
@@ -656,7 +662,7 @@ def klx_paper_render(paper):
 
         for item in part:
             result_tex += item_latex_render(item['item_id'])
-    result_tex += u'\klxans{%s}' % paper['name']
+    result_tex += u'\klxanshead{%s}' % paper['name']
     for part in paper['parts']:
         result_tex += _deal_part_head(part)
         if part[0]['type'] in [1001, 2001, 3001, 4001]:
@@ -718,6 +724,9 @@ def compile_latex(file):
     command2 = 'open {file} -a Skim.app'.format(file=file[:-4] + '.pdf')
     os.system(command2)
 
+# def get_random_paper():
+
+
 """
 === Setting =============================================================
 """
@@ -759,7 +768,7 @@ itmtyp_2_name = {1001: u'选择题',
                  }
 
 client = MongoClient('10.0.0.100', 27017)
-dbname = 'klx_math'
+dbname = 'klx_ch'
 db = client[dbname]
 
 
@@ -809,10 +818,10 @@ item_ids = [
     # '54d3175c0045fe3e0e531c94',
     # '53b4dab3e13823317fef6700',
     # '5359165ce1382357d4b0bf54',
-    ObjectId("537dcb02e138230941e9f0e1")
+    ObjectId("56c56c535417d123dfd5f12a")
 ]
 
 # do_multi_items_test(56465, 500)
-# do_certain_items(item_ids, subject)
-paper_id = ObjectId("54aa244d27ffa93a972c0862")
-do_paper_test(paper_id, subject)
+do_certain_items(item_ids, subject)
+# paper_id = ObjectId("54aa244d27ffa93a972c0862")
+# do_paper_test(paper_id, subject)
