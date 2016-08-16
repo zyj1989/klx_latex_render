@@ -158,11 +158,14 @@ def str2latex(ori):
     def cn_in_mathmode(s):  # by ningshuo
 
         def math_opr(s):
-            s = re.sub(ur'[\u4e00-\u9fa5,\u3001,\u2103,\u2191,\u2193]+',
+            s = re.sub(ur'[\u4e00-\u9fa5\u3001\u2103\u2191\u2193]+',
                        lambda x: ur'\text{%s}' % x.group(), s)
             unicode_cor = [
                 (ur'\u2264', ur'\leqslant '),
                 (ur'\u2265', ur'\geqslant '),
+                (ur'\u03c9', ur'\omega '),
+                (ur'\u03c6', ur'\phi '),
+                (ur'\u002C', ur'\uff0c '),
             ]
             for k, v in unicode_cor:
                 s = s.replace(k, v)
@@ -211,16 +214,6 @@ def str2latex(ori):
             (ur'\u2467', ur'{\text{\ding{179}}}'),
             (ur'\u2468', ur'{\text{\ding{180}}}'),
             (ur'\u2469', ur'{\text{\ding{181}}}'),
-            (ur'\u2160', ur'{\text{$\mathrm{I}$}}'),  # roman numbers
-            (ur'\u2161', ur'{\text{$\mathrm{II}$}}'),
-            (ur'\u2162', ur'{\text{$\mathrm{III}$}}'),
-            (ur'\u2163', ur'{\text{$\mathrm{IV}$}}'),
-            (ur'\u2164', ur'{\text{$\mathrm{V}$}}'),
-            (ur'\u2165', ur'{\text{$\mathrm{VI}$}}'),
-            (ur'\u2166', ur'{\text{$\mathrm{VII}$}}'),
-            (ur'\u2167', ur'{\text{$\mathrm{VIII}$}}'),
-            (ur'\u2168', ur'{\text{$\mathrm{IX}$}}'),
-            (ur'\u2169', ur'{\text{$\mathrm{X}$}}'),
             (ur'\u00a0', ur' '),
             (ur'\overparen', ur'\wideparen'),
             (ur'\lt', ur'<'),
@@ -267,7 +260,6 @@ def str2latex(ori):
     ori = re.sub(ur'\[\[un\]\]([\s\S]*?)\[\[/un\]\]',
                  lambda x: u'\\uline{%s}' % x.group(1), ori)
     ori = re.sub(ur'\u005f\u005f+', ur'\\dd ', ori)
-    ori = ori.replace(u'\n\n', '\n')
     ori = unicode_chem_cor(ori)
     # print ori
     return ori
@@ -389,12 +381,11 @@ def get_opt_img(opt, img_width):
     return [opt, opt_img]
 
 
-def deal_desc_img(desc):
+def deal_desc_img(s):
     result = {
         'text': '',
         'imgs': '',
     }
-    s = desc
     img_inpar = re.findall(ur'\[\[inpar\]\](.*?)\[\[/inpar\]\]', s)
     desc_text = re.sub(ur'\[\[inpar\]\](.*?)\[\[/inpar\]\]', u'', s)
     desc_text = re.sub(
@@ -408,9 +399,15 @@ def deal_desc_img(desc):
     return result
 
 
+def deal_ans_img(s):
+    ans_tex = re.sub(ur'\[\[(?:inpar|inline|display)\]\](.*?)\[\[/(?:inpar|inline|display)\]\]',
+                     lambda x: u'\\begin{displayimgs}%s\\end{displayimgs}' % x.group(1), s)
+    return ans_tex
+
+
 def deal_with_opt(opt, img_width, opts_head):
 
-    if opts_head == '\\imgch':
+    if opts_head == '\\imgchold':
         opt_text = re.sub(img_display_pattern, '', opt)
         opt_text = re.sub(img_inpar_pattern, '', opt_text)
         opt_text = re.sub(img_inline_pattern, '', opt_text)
@@ -427,20 +424,28 @@ def deal_with_opt(opt, img_width, opts_head):
             arg = 'height'
         opt_imgs = re.sub(ur'\[.*?\]', ur'[%s=%s\\optwidth]' %
                           (arg, img_width), opt_imgs)
+    elif opts_head == '\\imgch':
+        opt_text = re.sub(img_display_pattern, '', opt)
+        opt_text = re.sub(img_inpar_pattern, '', opt_text)
+        opt_text = re.sub(img_inline_pattern, '', opt_text)
+        opt_imgs = re.findall(ur'\]\](.*?)\[\[/', opt)
+        opt_imgs = u''.join(opt_imgs)
 
     else:
-        opt_imgs = []
+        opt_imgs = ''
         opt = re.sub(img_inline_pattern, lambda x: x.group(1), opt)
         opt = re.sub(img_display_pattern, lambda x: x.group(1), opt)
         opt = re.sub(img_inpar_pattern, lambda x: x.group(1), opt)
         opt_text = opt
     # print [opt_text, opt_imgs]
-    opt_text = opt_text.replace(u'\\par', u'\\\\ ')
+    # opt_text = opt_text.replace(u'\\par', u'\\\\ ')
     return [opt_text, opt_imgs]
 
 
 def deal_with_qs(qs, item_type):
     if item_type not in [1001, 1002, 2001, 2002]:
+        print '========'
+        show_pretty_dict(qs['desc'])
         desc_tex = str2latex(qs['desc'])
         qs_tex = deal_desc_img(desc_tex)
         opts = qs['opts']
@@ -456,13 +461,11 @@ def item_latex_render(item_id):
     item = db.items.find_one({'_id': item_id})
     qs_tex = u''
     if not item:
-        # print item_id
         return '%%%%%%%%%%%%%%%%'
     tex = '\r%% {} {}\r'.format(
         item_id, item['data']['type'])
     if item['data']['type'] in [1001, 2001, 1002, 2002, 4001, 4002]:
         tex += '\\begin{questions}'
-        # varwidth = width_map[item['data']['type']]
         qs = item['data']['qs'][0]
         if qs['desc'] == '' and item['data']['stem'] != '':
             desc = item['data']['stem']
@@ -477,8 +480,7 @@ def item_latex_render(item_id):
             opt = str2latex(opt)
             opt = deal_with_opt(opt, 0.222, opts_head)
             opt_tex += '{%s}{%s}' % (opt[0], opt[1])
-        # tex += u'\\klxitem{%s}{%s}{%s}{%s}' % (
-        # desc['text'], opt_tex, desc['imgs'], varwidth)
+        opt_tex = str2latex(opt_tex)
         tex += u'\\klxitemm{%s}{%s%s}' % (desc['imgs'],
                                           desc['text'], opt_tex)
 
@@ -487,12 +489,10 @@ def item_latex_render(item_id):
         # tex += '{{{}}}'.format(width_map[1003])
         if len(item['data']['stem']) == 0:
             if len(item['data']['qs']) == 1:
-                # print item['_id']
-                qs = item['data']['qs']
-                stem_buffer = deal_desc_img()
-                tex += deal_with_qs(qs, item['data']['type'])
+                qs = item['data']['qs'][0]
+                qs_tex = deal_with_qs(qs, item['data']['type'])
+                tex += u'\klxitemm{%s}{%s' % (qs_tex['imgs'], qs_tex['text'])
             else:
-                # tex += u'\\begin{subquestions}\n'
                 for qs in item['data']['qs']:
                     qss_tex = u''
                     if len(qs['desc']) != 0:
@@ -500,80 +500,175 @@ def item_latex_render(item_id):
                         qs_tex += u'\\klxqs{%s}{%s' % (
                             qs_buffer['imgs'], qs_buffer['text'])
                     if 'qs' in qs:
-                        # qss_tex += u'\\begin{subsubquestions}\n'
                         for qss in qs['qs']:
                             qss_buffer = deal_with_qs(
                                 qss, item['data']['type'])
                             qss_tex += u'\\klxqss{%s}{%s}' % (
                                 qss_buffer['imgs'], qss_buffer['text'])
-                        # qss_tex += u'\\end{subsubquestions}\n'
                     qs_tex += qss_tex
                     qs_tex += ur'}'
-                tex += qs_tex
-                # tex += u'\\end{subquestions}\n'
+                tex += u'\klxitemm{}{%s' % qs_tex
         else:
+            print 'yes'
             stem_buffer = deal_desc_img(str2latex(item['data']['stem']))
-            tex += u'\\klxitemm{%s}{\r\t%s\r' % (
+            print str2latex(item['data']['stem'])
+            tex += u'\\klxitemm{%s}{%s' % (
                 stem_buffer['imgs'], stem_buffer['text'])
-
-            # print tex
             if len(item['data']['qs'][0]['desc']) != 0:
-                # tex += u'\\vspace{-1em}\\begin{subquestions}\n'
                 for qs in item['data']['qs']:
                     qss_tex = u''
-                    qs_buffer = deal_with_qs(qs, item['data']['type'])
-                    qs_tex += u'\t\\klxqs{%s}{\r\t\t%s\r' % (
-                        qs_buffer['imgs'], qs_buffer['text'])
+                    if len(qs['desc']) != 0:
+                        show_pretty_dict(qs)
+                        qs_buffer = deal_with_qs(qs, item['data']['type'])
+                        show_pretty_dict(qs_buffer)
+                        qs_tex += u'\\klxqs{%s}{%s' % (
+                            qs_buffer['imgs'], qs_buffer['text'])
                     if 'qs' in qs:
-                        # qss_tex += u'\\begin{subsubquestions}\n'
                         for qss in qs['qs']:
                             qss_buffer = deal_with_qs(
                                 qss, item['data']['type'])
-                            qss_tex += u'\t\t\\klxqss{%s}{\r\t\t\t%s\r\t\t}\r' % (
+                            qss_tex += u'\\klxqss{%s}{%s}' % (
                                 qss_buffer['imgs'], qss_buffer['text'])
-                    print 'qs:', qs_tex
                     qs_tex += qss_tex
-                    print qss_tex
-                    qs_tex += u'\t}\r'
-                    # print qs_tex
+                    qs_tex += ur'}'
                 tex += qs_tex
-                # tex += u'\\end{subquestions}\n'
-       # tex += u'\\end{varwidth}\n'
-        tex = re.sub(img_re3, u'', tex)
-        tex += u'}\r'
+        # tex = re.sub(img_re3, u'', tex)
+        tex += u'}'
     tex += u'\\end{questions}'  # end of an item
     if item['data']['type'] in [1001, 2001, 3001, 4001]:
         tex = tex.replace(ur'\dd ', ur'\dq ')
-        # tex = re.sub(ur'\\begin{question}\s?\\\\', ur'\\begin{question}', tex)
-        # tex = tex.replace(ur'\begin{question}\\', ur'\begin{question}')
-        # desc = get_opt_img(desc, 0.5)
-        # qss = re.sub(img_re2, u'\\ ', qss)
-        # desc = str2latex(desc)
-        # qss = str2latex(qss)
-        # opt_tex = str2latex(opt_tex)
-        # item_tex = '\\\\\n'.join(tex_list)
-        # # item_tex = u'%{}\n{}\\\\\n{}\\\\\n{}'.format(
-        # # item_id, desc, qss, opt_tex)
-        # return item_tex
     return tex
+
+
+def int2choice(s):
+    if type(s) == list:
+        for idx, i in enumerate(s, start=0):
+            s[idx] = str(i)
+        s = ''.join(s)
+
+    elif type(s) == int:
+        s = str(s)
+    s = s.replace(ur'0', ur'A')
+    s = s.replace(ur'1', ur'B')
+    s = s.replace(ur'2', ur'C')
+    s = s.replace(ur'3', ur'D')
+    s = s.replace(ur'4', ur'E')
+    return s
+
+
+def itemans_latex_render(item_id):
+    item = db.items.find_one({'_id': item_id})
+    qs_tex = u''
+    if not item:
+        return '%%%%%%%%%%%%%%%%'
+    tex = '\r%% {} {}\r'.format(item_id, item['data']['type'])
+    tex += '\\begin{questions}'
+    if item['data']['type'] in [1001, 2001, 3001, 4001]:
+        qs = item['data']['qs'][0]
+        if qs['exp'] == '':
+            pass
+        else:
+            exp = str2latex(qs['exp'])
+            exp = deal_ans_img(exp)
+            tex += u'\klxitemans{%s}' % exp
+    elif item['data']['type'] in [1002, 2002, 3002, 4002]:
+        qs = item['data']['qs'][0]
+        ans = str2latex(qs['ans'])
+        exp = str2latex(qs['exp'])
+        exp = deal_ans_img(exp)
+        if exp != '':
+            exp = u'解析：' + exp
+        tex += u'\klxitemans{%s \hspace{1em}%s}' % (ans, exp)
+    else:
+        if len(item['data']['qs']) == 1:
+            qs = item['data']['qs'][0]
+            ans = deal_ans_img(str2latex(qs['ans']))
+            exp = deal_ans_img(str2latex(qs['exp']))
+            if exp != '':
+                exp = u'解析：' + exp
+            tex += u'\klxitemans{%s\hspace{1em}%s}' % (ans, exp)
+        else:
+            tex_buffer = ''
+            for qs in item['data']['qs']:
+                ans = deal_ans_img(str2latex(qs['ans']))
+                exp = deal_ans_img(str2latex(qs['exp']))
+                if exp != '':
+                    exp = u'解析：' + exp
+                tex_buffer += '\klxqsans{%s\hspace{1em}%s}' % (ans, exp)
+            tex += u'\klxitemans{%s}' % tex_buffer
+    tex += u'\\end{questions}'
+    return tex
+
+
+def get_choice_ans(item_id):
+    item = db.items.find_one({'_id': item_id})
+    return int2choice(item['data']['qs'][0]['ans'])
+
+
+def get_choice_anssheet(part):
+    result = ''
+    lines = []
+    max_col = 10  # 10 for math , 5 for science subject
+    max_qs = len(part)
+    if max_qs < max_col:
+        max_col = max_qs
+    max_rows = max_qs / max_col
+    last_row = max_qs % max_col
+    if last_row == 0:
+        last_row = max_col
+    rest = max_col - last_row
+    col_speci = []
+    for x in range(max_col):
+        col_speci.append('c')
+    col_speci = u'|'.join(col_speci)
+    result = u'{\centering \\begin{tabular}{|%s|} \hline \r' % col_speci
+    idx = []
+    ans = []
+    for i in range(max_qs):
+        if i % max_col == 0 and i != 0:
+            lines.append(u'&'.join(idx))
+            lines.append(u'&'.join(ans))
+            idx = []
+            ans = []
+        item = part[i]
+        idx.append(str(i + 1))
+        ans.append(get_choice_ans(item['item_id']))
+    if max_col != max_qs:
+        for i in range(rest):
+            idx.append(u' ')
+            ans.append(u' ')
+
+    lines.append(u'&'.join(idx))
+    lines.append(u'&'.join(ans))
+    result += u'\\\\ \hline \r'.join(lines)
+    result += u'\\\\ \hline \r \\end{tabular}\par}'
+    return result
 
 
 def klx_paper_render(paper):
 
     def _deal_paper_head(paper):
-        return '%% {id}\n\\begin{{center}}\n{paper_name}\n\\end{{center}}'.format(id=paper['_id'], paper_name=paper['name'])
+        return '%% {id}\n{{\centering {paper_name} \par}}'.format(id=paper['_id'], paper_name=paper['name'])
 
     def _deal_part_head(part):
         item_type = itmtyp_2_name[part[0]['type']]
-        return u'\\wns{{{}}} \\\\* \n'.format(item_type)
+        return u'\\wns{{{}}} \par \\nopagebreak \n'.format(item_type)
 
     result_tex = template
+    result_tex += u'\\onecolumn \n '
     result_tex += _deal_paper_head(paper)
     for part in paper['parts']:
         result_tex += _deal_part_head(part)
+
         for item in part:
             result_tex += item_latex_render(item['item_id'])
-
+    result_tex += u'\klxanshead{%s}' % paper['name']
+    for part in paper['parts']:
+        result_tex += _deal_part_head(part)
+        if part[0]['type'] in [1001, 2001, 3001, 4001]:
+            result_tex += get_choice_anssheet(part)
+        for item in part:
+            result_tex += itemans_latex_render(item['item_id'])
     result_tex += '\\end{document}'
     return result_tex
 
@@ -615,10 +710,24 @@ def do_paper_test(paper_id, subject):
     paper = db.papers.find_one({'_id': ObjectId(paper_id)})
     # print type(paper)
     tex = klx_paper_render(paper)
-    f = open(os.path.join(paper_path, '{}.tex'.format(paper_id)), 'w')
+    file = os.path.join(paper_path, '{}.tex'.format(paper_id))
+    f = open(file, 'w')
     f.write(tex)
     f.close
+    return file
 
+
+def compile_latex(file):
+    command = 'xelatex -output-directory {dir} {file}'.format(
+        dir=paper_path, file=file)
+    os.system(command)
+    command2 = 'open {file} -a Skim.app'.format(file=file[:-4] + '.pdf')
+    os.system(command2)
+
+
+def do_multi_papers(paper_ids, subject):
+    for paper_id in paper_ids:
+        do_paper_test(paper_id, subject)
 
 """
 === Setting =============================================================
@@ -688,7 +797,7 @@ img_file_re = re.compile(ur'\w+\.(?:png|jpg|gif|bmp|jpeg|tif)', re.I)
 img_display_pattern = re.compile(ur'\[\[display\]\](.*?)\[\[/display\]\]')
 img_inpar_pattern = re.compile(ur'\[\[inpar\]\](.*?)\[\[/inpar\]\]')
 img_inline_pattern = re.compile(ur'\[\[inline\]\](.*?)\[\[/inline\]\]')
-output_dir = '/Users/zhangyingjie/var/data/img'
+output_dir = '/Users/zhangyingjie/var/data/paper'
 
 for path in [paper_path, item_path, img_path]:
     if os.path.exists(path):
@@ -711,10 +820,18 @@ item_ids = [
     # '54d3175c0045fe3e0e531c94',
     # '53b4dab3e13823317fef6700',
     # '5359165ce1382357d4b0bf54',
-    ObjectId("56b1b8d95417d15f07873085")
+    ObjectId("56caaf3b5417d15f08809a46")
 ]
-
-# do_multi_items_test(56465, 500)
+paper_ids = [
+    ObjectId("57071888bbddbd46d93fe327"),
+    ObjectId("570b56c7e694aa6ba7293191"),
+    ObjectId("573d7852e694aa772775ea61"),
+    ObjectId("5770db02bbddbd70882ffaf4"),
+    ObjectId("5763455ebbddbd0740def351"),
+    ObjectId("57071ce2e694aa58f492c5fa"),
+]
+# do_multi_items_test(41238, 1000)
 do_certain_items(item_ids, subject)
-# paper_id = ObjectId("54db033827ffa92ff08080c0")
+# paper_id = ObjectId("54aa244d27ffa93a972c0862")
 # do_paper_test(paper_id, subject)
+# do_multi_papers(paper_ids, subject)
