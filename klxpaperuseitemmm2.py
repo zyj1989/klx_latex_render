@@ -835,6 +835,6 @@ paper_ids = [
 ]
 # do_multi_items_test(41238, 10000)
 # do_certain_items(item_ids, subject)
-paper_id = ObjectId("573d7852e694aa772775ea61")
+paper_id = ObjectId("5763455ebbddbd0740def351")
 do_paper_test(paper_id, subject)
 # do_multi_papers(paper_ids, subject)

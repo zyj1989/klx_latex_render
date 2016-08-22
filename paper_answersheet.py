@@ -481,15 +481,19 @@ def item_latex_render(item_id):
             opt = deal_with_opt(opt, 0.222, opts_head)
             opt_tex += '{%s}{%s}' % (opt[0], opt[1])
         opt_tex = str2latex(opt_tex)
+        if item['data']['type'] in [1002, 2002]:
+            opt_tex += u'\\CheckBox '
         tex += u'\\klxitemm{%s}{%s%s}' % (desc['imgs'],
                                           desc['text'], opt_tex)
 
     elif item['data']['type'] in [1003, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 4003, 4004, 3003, 3004]:
+        ans = ''
         tex += '\\begin{questions}\n'  # begin of an item
         # tex += '{{{}}}'.format(width_map[1003])
         if len(item['data']['stem']) == 0:
             if len(item['data']['qs']) == 1:
                 qs = item['data']['qs'][0]
+                ans += u'\\par ------ ' + str2latex(qs['ans'])
                 qs_tex = deal_with_qs(qs, item['data']['type'])
                 tex += u'\klxitemm{%s}{%s' % (qs_tex['imgs'], qs_tex['text'])
             else:
@@ -505,8 +509,10 @@ def item_latex_render(item_id):
                                 qss, item['data']['type'])
                             qss_tex += u'\\klxqss{%s}{%s}' % (
                                 qss_buffer['imgs'], qss_buffer['text'])
+                            ans += u'\\par --- ' + str2latex(qss['ans'])
                     qs_tex += qss_tex
                     qs_tex += ur'}'
+                    ans += u'\\par ------ ' + str2latex(qs['ans'])
                 tex += u'\klxitemm{}{%s' % qs_tex
         else:
             print 'yes'
@@ -529,11 +535,13 @@ def item_latex_render(item_id):
                                 qss, item['data']['type'])
                             qss_tex += u'\\klxqss{%s}{%s}' % (
                                 qss_buffer['imgs'], qss_buffer['text'])
+                            ans += u'\\par --- ' + str2latex(qss['ans'])
                     qs_tex += qss_tex
                     qs_tex += ur'}'
+                    ans += u'\\par ------ ' + str2latex(qs['ans'])
                 tex += qs_tex
         # tex = re.sub(img_re3, u'', tex)
-        tex += u'}'
+        tex += u'\\AnswerBox{%s}}' % ans
     tex += u'\\end{questions}'  # end of an item
     if item['data']['type'] in [1001, 2001, 3001, 4001]:
         tex = tex.replace(ur'\dd ', ur'\dq ')
@@ -670,6 +678,18 @@ def klx_paper_render(paper):
         for item in part:
             result_tex += itemans_latex_render(item['item_id'])
     result_tex += '\\end{document}'
+    return result_tex
+
+
+def klx_paper_answersheet_render(paper):
+    def _deal_part_head(part):
+        item_type = itmtyp_2_name[part[0]['type']]
+        return u'\\wns{{{}}} \par \\nopagebreak \n'.format(item_type)
+    result_tex = template
+    for part in paper['parts']:
+        result_tex += _deal_part_head(part)
+        for item in part:
+            result_tex += item_latex_render(item['item_id'])
     return result_tex
 
 
@@ -841,6 +861,6 @@ paper_ids = [
 ]
 # do_multi_items_test(41238, 10000)
 # do_certain_items(item_ids, subject)
-paper_id = ObjectId("573d7852e694aa772775ea61")
+paper_id = ObjectId("5770db02bbddbd70882ffaf4")
 do_paper_test(paper_id, subject, 2)
 # do_multi_papers(paper_ids, subject)
