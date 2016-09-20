@@ -458,8 +458,8 @@ def item_latex_render(item_id):
             opt = deal_with_opt(opt, 0.222, opts_head)
             opt_tex += '{%s}{%s}' % (opt[0], opt[1])
         opt_tex = str2latex(opt_tex)
-        tex += u'\\klxitem{{{desc}}}{{{opt}}}{{{img}}}{{{width}mm}}'.format(
-            desc=desc['text'], opt=opt_tex, img=desc['imgs'], width=item_width)
+        tex += u'\\klxitem{{{desc}}}{{{opt}}}{{{img}}}{{{width}mm}}{{{id}}}'.format(
+            desc=desc['text'], opt=opt_tex, img=desc['imgs'], width=item_width, id=item_id)
     elif item_type in [1003, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 4003, 4004, 3003, 3004]:
         # tex += '{{{}}}'.format(width_map[1003])
         if len(item['data']['stem']) == 0 and len(item['data']['qs']) == 1:
@@ -480,7 +480,7 @@ def item_latex_render(item_id):
                     qs_tex += u'\\klxqs{%(imgs)s}{%(text)s}' % qs_buffer
                 item_buffer['text'] += qs_tex
         item_buffer['width'] = str(width_map[item_type]) + 'mm'
-        tex += u'\\klxitem{%(text)s}{}{%(imgs)s}{%(width)s}' % item_buffer
+        tex += u'\\klxitem{%(text)s}{}{%(imgs)s}{%(width)s}{%s}' % (item_buffer, item_id)
     tex += u'\\end{questions}'  # end of an item
     if item['data']['type'] in [1001, 2001, 3001, 4001]:
         tex = tex.replace(ur'\dd ', ur'\dq ')
@@ -735,10 +735,10 @@ item_ids = [
     # '54d3175c0045fe3e0e531c94',
     # '53b4dab3e13823317fef6700',
     # '5359165ce1382357d4b0bf54',
-    ObjectId("537dcb02e138230941e9f0e1")
+    ObjectId("570b1b0d5417d134eadf1ce7")
 ]
 
-do_multi_items_test(23232, 100)
-# do_certain_items(item_ids, subject)
+# do_multi_items_test(23232, 100)
+do_certain_items(item_ids, subject)
 # paper_id = ObjectId("54db033827ffa92ff08080c0")
 # do_paper_test(paper_id, subject)
